@@ -134,7 +134,7 @@ create ITERATOR with `iter-list'."
 (defun* iter-sub-next (seq elm &key (test 'eq))
   "Create iterator from position of ELM to end of SEQ."
   (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (subseq seq (1+ pos)))
+                 (sub      (nthcdr (1+ pos) seq))
                  (iterator (iter-list sub)))
      (lambda ()
        (iter-next iterator))))
@@ -142,7 +142,7 @@ create ITERATOR with `iter-list'."
 (defun* iter-sub-prec (seq elm &key (test 'eq))
   "Create iterator from position of ELM to beginning of SEQ."
   (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (reverse (subseq seq 0 pos)))
+                 (sub      (nthcdr pos (reverse seq)))
                  (iterator (iter-list sub)))
      (lambda ()
        (iter-next iterator))))
