@@ -121,7 +121,7 @@ Special commands:
         (kill-local-variable 'mode-line-format)))
 
 ;;; Iterators.
-(defmacro iter-list (list-obj)
+(defmacro ioccur-iter-list (list-obj)
   "Return an iterator from list LIST-OBJ."
   `(lexical-let ((lis ,list-obj))
      (lambda ()
@@ -129,30 +129,31 @@ Special commands:
          (setq lis (cdr lis))
          elm))))
 
-(defun iter-next (iterator)
+(defun ioccur-iter-next (iterator)
   "Return next elm of ITERATOR."
   (funcall iterator))
 
-(defsubst* iter-position (item seq &key (test 'eq))
+(defsubst* ioccur-iter-position (item seq &key (test 'eq))
   "A simple replacement of CL `position'."
   (loop for i in seq for index from 0
      when (funcall test i item) return index))
 
-(defun* iter-sub-next (seq elm &key (test 'eq))
+(defun* ioccur-iter-sub-next (seq elm &key (test 'eq))
   "Create iterator from position of ELM to end of SEQ."
-  (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (subseq seq (1+ pos)))
-                 (iterator (iter-list sub)))
+  (lexical-let* ((pos      (ioccur-iter-position elm seq :test test))
+                 (sub      (nthcdr (1+ pos) seq))
+                 (iterator (ioccur-iter-list sub)))
      (lambda ()
-       (iter-next iterator))))
+       (ioccur-iter-next iterator))))
 
-(defun* iter-sub-prec (seq elm &key (test 'eq))
+(defun* ioccur-iter-sub-prec (seq elm &key (test 'eq))
   "Create iterator from position of ELM to beginning of SEQ."
-  (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (reverse (subseq seq 0 pos)))
-                 (iterator (iter-list sub)))
+  (lexical-let* ((rev-seq  (reverse seq))
+                 (pos      (ioccur-iter-position elm rev-seq :test test))
+                 (sub      (nthcdr (1+ pos) rev-seq))
+                 (iterator (ioccur-iter-list sub)))
      (lambda ()
-       (iter-next iterator))))
+       (ioccur-iter-next iterator))))
 
 (defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'file))
   "Return an alist of all the (num-line line) of a file or buffer BFILE matching REGEXP."
@@ -277,7 +278,7 @@ Special commands:
   (let* ((prompt         (propertize ioccur-search-prompt 'face 'minibuffer-prompt))
          (inhibit-quit   (not (fboundp 'read-key)))
          (tmp-list       ())
-         (it             (iter-list ioccur-history))
+         (it             (ioccur-iter-list ioccur-history))
          (cur-hist-elm   (car ioccur-history))
          (start-hist     nil) ; Flag to notify if cycling history started.
          (old-yank-point start-point)
@@ -293,20 +294,20 @@ Special commands:
                    ;; starting at the current element of history.
                    (when start-hist
                      (if (< arg 0) ; M-p (move from left to right in ring).
-                         (setq it (iter-sub-next ioccur-history
-                                                 cur-hist-elm :test 'equal))
-                         (setq it (iter-sub-prec ioccur-history
-                                                 cur-hist-elm :test 'equal))))
+                         (setq it (ioccur-iter-sub-next ioccur-history
+                                                        cur-hist-elm :test 'equal))
+                         (setq it (ioccur-iter-sub-prec ioccur-history
+                                                        cur-hist-elm :test 'equal))))
                    (setq tmp-list nil)
-                   (let ((next (iter-next it)))
+                   (let ((next (ioccur-iter-next it)))
                      ;; If no more elements in list
                      ;; rebuild a new iterator based on the whole history list
                      ;; and restart from beginning or end of list.
                      (unless next
-                       (setq it (iter-list (if (< arg 0)
+                       (setq it (ioccur-iter-list (if (< arg 0)
                                                ioccur-history
                                                (reverse ioccur-history))))
-                       (setq next (iter-next it)) (setq start-hist nil))
+                       (setq next (ioccur-iter-next it)) (setq start-hist nil))
                      (setq initial-input (or next "")))
                    (unless (string= initial-input "")
                      (loop for char across initial-input do (push char tmp-list))
@@ -492,7 +493,7 @@ for commands provided in the search buffer."
                         (string= ioccur-search-pattern ""))
               (push ioccur-search-pattern ioccur-history))
             ;; If elm already exists in history ring push it on top of stack.
-            (let ((pos-hist-elm (iter-position ioccur-search-pattern
+            (let ((pos-hist-elm (ioccur-iter-position ioccur-search-pattern
                                                ioccur-history :test 'equal)))
               (unless (string= (car ioccur-history)
                                ioccur-search-pattern)
