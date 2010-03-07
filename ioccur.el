@@ -293,6 +293,7 @@ Special commands:
     (unless (string= initial-input "")
       (loop for char across initial-input do (push char tmp-list)))
     (setq ioccur-search-pattern initial-input)
+    ;; Cycle history function.
     (flet ((cycle-hist (arg)
              (if ioccur-history
                  (progn
@@ -311,9 +312,10 @@ Special commands:
                      ;; rebuild a new iterator based on the whole history list
                      ;; and restart from beginning or end of list.
                      (unless next
-                       (setq it (ioccur-iter-list (if (< arg 0)
-                                               ioccur-history
-                                               (reverse ioccur-history))))
+                       (setq it (ioccur-iter-list
+                                 (if (< arg 0)
+                                     ioccur-history
+                                     (reverse ioccur-history))))
                        (setq next (ioccur-iter-next it)) (setq start-hist nil))
                      (setq initial-input (or next "")))
                    (unless (string= initial-input "")
@@ -321,32 +323,33 @@ Special commands:
                      (setq cur-hist-elm initial-input))
                    (setq ioccur-search-pattern initial-input)
                    (setq start-hist t))
-                 (message "No history available.") (sit-for 2) t)))
+                 (message "No history available.") (sit-for 2) t))
+           
+           (start-timer ()
+             (unless ioccur-search-timer
+               (ioccur-start-timer)))
+           
+           (stop-timer ()
+             (when ioccur-search-timer
+               (ioccur-cancel-search))))
+      ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-search-pattern))))
                (case char
                  ((down ?\C-n)                 ; Next line.
-                  (when ioccur-search-timer
-                    (ioccur-cancel-search))
-                  (ioccur-next-line)
+                  (stop-timer) (ioccur-next-line)
                   (ioccur-color-current-line) t)
                  ((up ?\C-p)                   ; Precedent line.
-                  (when ioccur-search-timer
-                    (ioccur-cancel-search))
-                  (ioccur-precedent-line)
+                  (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
                  (C-down                       ; Scroll both windows down.
-                  (when ioccur-search-timer
-                    (ioccur-cancel-search))
+                  (stop-timer)
                   (ioccur-scroll-down) t)
                  (C-up                         ; Scroll both windows up.
-                  (when ioccur-search-timer
-                    (ioccur-cancel-search))
-                  (ioccur-scroll-up) t)
+                  (stop-timer) (ioccur-scroll-up) t)
                  ((?\e ?\r) (message nil) nil) ; RET or ESC break and exit code.
                  (?\d                          ; Delete backward with DEL.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
@@ -360,20 +363,16 @@ Special commands:
                  (?\C-v                        ; Scroll down.
                   (scroll-other-window 1) t)
                  (?\C-k                        ; Kill input.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
-                  (kill-new ioccur-search-pattern)
-                  (setq tmp-list ()) t)
+                  (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
                  (?\C-w                        ; Yank stuff at point.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (unless old-yank-point (setq old-yank-point (point)))
-                    (setq yank-point (point))
-                    (forward-word 1)
+                    (setq yank-point (point)) (forward-word 1)
                     (setq initial-input (buffer-substring yank-point (point))))
                   (unless (string= initial-input "")
                     (loop for char across initial-input do (push char tmp-list)))
@@ -381,16 +380,13 @@ Special commands:
                  (?\M-v                        ; Scroll up.
                   (scroll-other-window -1) t)
                  (?\M-p                        ; Precedent history elm.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (cycle-hist -1))
                  (?\M-n                        ; Next history elm.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (cycle-hist 1))
                  (t                            ; Store character.
-                  (unless ioccur-search-timer
-                    (ioccur-start-timer))
+                  (start-timer)
                   (if (characterp char)
                       (push char tmp-list)
                       ;; Else, a non--character event is entered, not listed above.
