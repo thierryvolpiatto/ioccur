@@ -521,25 +521,21 @@ for commands provided in the search buffer."
 
 (defun ioccur-color-current-line ()
   "Highlight and underline current line in ioccur buffer."
-  (if (not ioccur-occur-overlay)
-      (setq ioccur-occur-overlay
-            (make-overlay
-             (line-beginning-position) (1+ (line-end-position))))
+  (if ioccur-occur-overlay
       (move-overlay ioccur-occur-overlay
-                    (line-beginning-position) (1+ (line-end-position))))
-  (overlay-put ioccur-occur-overlay
-               'face 'ioccur-overlay-face))
+                    (point-at-bol) (1+ (point-at-eol)))
+      (setq ioccur-occur-overlay
+            (make-overlay (point-at-bol) (1+ (point-at-eol)))))
+  (overlay-put ioccur-occur-overlay 'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
   "Highlight and underline current position on matched line in current-buffer."
-  (if (not ioccur-match-overlay)
-      (setq ioccur-match-overlay
-            (make-overlay
-             (line-beginning-position) (1+ (line-end-position))))
+  (if ioccur-match-overlay
       (move-overlay ioccur-match-overlay
-                    (line-beginning-position) (1+ (line-end-position))))
-  (overlay-put ioccur-match-overlay
-               'face 'ioccur-match-overlay-face))
+                    (point-at-bol) (1+ (point-at-eol)))
+      (setq ioccur-match-overlay
+            (make-overlay (point-at-bol) (1+ (point-at-eol)))))
+  (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
 ;;; Provide
 (provide 'ioccur)
