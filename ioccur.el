@@ -23,6 +23,14 @@
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
 
+;;; Install:
+;;  -------
+
+;; Add this file to your `load-path', BYTE-COMPILE it and
+;; add (require 'ioccur) in your .emacs.
+;; Start with M-x ioccur
+
+
 ;;; Code:
 (require 'derived)
 (eval-when-compile (require 'cl))
@@ -59,9 +67,8 @@
 
 (defcustom ioccur-mode-line-string
   " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-down/up:Scroll, C-w:Yank tap"
-  "*Documentation of `ioccur-occur' prompt displayed in mode-line.
-Set it to nil to remove doc in mode-line.
-If you use this you will want maybe to set `ioccur-docstring' to nil"
+  "*Documentation of `ioccur' prompt displayed in mode-line.
+Set it to nil to remove doc in mode-line."
   :group 'ioccur
   :type  'string)
 
@@ -524,7 +531,7 @@ for commands provided in the search buffer."
                'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
-  "Highlight and current position on matched line."
+  "Highlight and underline current position on matched line in current-buffer."
   (if (not ioccur-match-overlay)
       (setq ioccur-match-overlay
             (make-overlay
