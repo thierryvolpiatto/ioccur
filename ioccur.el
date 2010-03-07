@@ -133,14 +133,14 @@ Special commands:
   "Return next elm of ITERATOR."
   (funcall iterator))
 
-(defsubst* ioccur-iter-position (item seq &key (test 'eq))
+(defsubst* ioccur-position (item seq &key (test 'eq))
   "A simple replacement of CL `position'."
   (loop for i in seq for index from 0
      when (funcall test i item) return index))
 
 (defun* ioccur-iter-sub-next (seq elm &key (test 'eq))
   "Create iterator from position of ELM to end of SEQ."
-  (lexical-let* ((pos      (ioccur-iter-position elm seq :test test))
+  (lexical-let* ((pos      (ioccur-position elm seq :test test))
                  (sub      (nthcdr (1+ pos) seq))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
@@ -149,7 +149,7 @@ Special commands:
 (defun* ioccur-iter-sub-prec (seq elm &key (test 'eq))
   "Create iterator from position of ELM to beginning of SEQ."
   (lexical-let* ((rev-seq  (reverse seq))
-                 (pos      (ioccur-iter-position elm rev-seq :test test))
+                 (pos      (ioccur-position elm rev-seq :test test))
                  (sub      (nthcdr (1+ pos) rev-seq))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
@@ -493,7 +493,7 @@ for commands provided in the search buffer."
                         (string= ioccur-search-pattern ""))
               (push ioccur-search-pattern ioccur-history))
             ;; If elm already exists in history ring push it on top of stack.
-            (let ((pos-hist-elm (ioccur-iter-position ioccur-search-pattern
+            (let ((pos-hist-elm (ioccur-position ioccur-search-pattern
                                                ioccur-history :test 'equal)))
               (unless (string= (car ioccur-history)
                                ioccur-search-pattern)
