@@ -46,6 +46,7 @@
   :prefix "ioccur-"
   :group 'text)
 
+;;; User variables.
 (defcustom ioccur-search-delay 0.2
   "*During incremental searching, display is updated all these seconds."
   :group 'ioccur
@@ -69,6 +70,12 @@ If you use this you will want maybe to set `ioccur-docstring' to nil"
   :group 'ioccur
   :type 'integer)
 
+(defcustom ioccur-max-length-history 100
+  "*Maximum number of element stored in `ioccur-history'."
+  :group 'ioccur
+  :type 'integer)
+
+;;; Faces.
 (defface ioccur-overlay-face '((t (:background "Green4" :underline t)))
   "Face for highlight line in ioccur buffer."
   :group 'ioccur-faces)
@@ -85,10 +92,11 @@ If you use this you will want maybe to set `ioccur-docstring' to nil"
   "Face for highlight found regexp in incremental buffer."
   :group 'ioccur-faces)
 
-(defvar ioccur-face 'ioccur-overlay-face)
-(defvar ioccur-match-face 'ioccur-match-overlay-face)
+(defface ioccur-num-line-face '((t (:foreground "OrangeRed")))
+  "Face for highlight number line in ioccur buffer."
+  :group 'ioccur-faces)
 
-;;; Internal variables
+;;; Internal variables.
 (defvar ioccur-search-pattern "")
 (defvar ioccur-search-timer nil)
 (defvar ioccur-quit-flag nil)
@@ -97,8 +105,8 @@ If you use this you will want maybe to set `ioccur-docstring' to nil"
 (defvar ioccur-exit-and-quit-p nil)
 (defvar ioccur-history nil)
 (defvar ioccur-match-overlay nil)
-(defvar ioccur-count-occurences 0
-  "Simple variable to store the number of occurence found.")
+(defvar ioccur-count-occurences 0)
+  
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -112,7 +120,7 @@ Special commands:
                 (line-number-mode "%l") " " ioccur-mode-line-string "-%-"))
         (kill-local-variable 'mode-line-format)))
 
-;; Iterators
+;;; Iterators.
 (defmacro iter-list (list-obj)
   "Return an iterator from list LIST-OBJ."
   `(lexical-let ((lis ,list-obj))
@@ -122,8 +130,7 @@ Special commands:
          elm))))
 
 (defun iter-next (iterator)
-  "Return next elm of ITERATOR.
-create ITERATOR with `iter-list'."
+  "Return next elm of ITERATOR."
   (funcall iterator))
 
 (defsubst* iter-position (item seq &key (test 'eq))
@@ -175,7 +182,7 @@ create ITERATOR with `iter-list'."
                (line-to-print new-ltp))
           (incf ioccur-count-occurences)
           (insert (concat " " (propertize (int-to-string (+ (first i) 1))
-                                          'face 'ioccur-match-face
+                                          'face 'ioccur-num-line-face
                                           'help-echo line-to-print)
                           ":"
                           (if (> (length line-to-print) lline)
@@ -413,6 +420,7 @@ create ITERATOR with `iter-list'."
               ioccur-search-pattern
               ioccur-current-buffer)))))
 
+
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
@@ -489,7 +497,9 @@ for commands provided in the search buffer."
               (unless (string= (car ioccur-history)
                                ioccur-search-pattern)
                 (push (pop (nthcdr pos-hist-elm ioccur-history))
-                      ioccur-history))))
+                      ioccur-history)))
+            (when (> (length ioccur-history) ioccur-max-length-history)
+              (setq ioccur-history (delete (car (last ioccur-history)) ioccur-history))))
         (setq ioccur-count-occurences 0)
         (setq ioccur-quit-flag nil)))))
 
@@ -510,7 +520,7 @@ for commands provided in the search buffer."
       (move-overlay ioccur-occur-overlay
                     (line-beginning-position) (1+ (line-end-position))))
   (overlay-put ioccur-occur-overlay
-               'face ioccur-face))
+               'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
   "Highlight and current position on matched line."
@@ -521,7 +531,7 @@ for commands provided in the search buffer."
       (move-overlay ioccur-match-overlay
                     (line-beginning-position) (1+ (line-end-position))))
   (overlay-put ioccur-match-overlay
-               'face ioccur-match-face))
+               'face 'ioccur-match-overlay-face))
 
 ;;; Provide
 (provide 'ioccur)
