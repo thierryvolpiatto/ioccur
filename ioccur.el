@@ -141,7 +141,7 @@ Special commands:
 (defun* iter-sub-next (seq elm &key (test 'eq))
   "Create iterator from position of ELM to end of SEQ."
   (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (nthcdr (1+ pos) seq))
+                 (sub      (subseq seq (1+ pos)))
                  (iterator (iter-list sub)))
      (lambda ()
        (iter-next iterator))))
@@ -149,7 +149,7 @@ Special commands:
 (defun* iter-sub-prec (seq elm &key (test 'eq))
   "Create iterator from position of ELM to beginning of SEQ."
   (lexical-let* ((pos      (iter-position elm seq :test test))
-                 (sub      (nthcdr pos (reverse seq)))
+                 (sub      (reverse (subseq seq 0 pos)))
                  (iterator (iter-list sub)))
      (lambda ()
        (iter-next iterator))))
