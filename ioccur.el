@@ -1,10 +1,12 @@
 ;;; ioccur.el --- Incremental occur.
 
-;; Author: Thierry Volpiatto
+;; Author: Thierry Volpiatto <thierry dot volpiatto at gmail dot com>
 
 ;; Copyright (C) 2010 Thierry Volpiatto, all rights reserved.
 
 ;; Compatibility: GNU Emacs 23.1+
+
+;; X-URL: http://mercurial.intuxication.org/hg/ioccur
 
 ;; This file is not part of GNU Emacs. 
 
@@ -127,6 +129,11 @@ Special commands:
                 (line-number-mode "%l") " " ioccur-mode-line-string "-%-"))
         (kill-local-variable 'mode-line-format)))
 
+(defsubst* ioccur-position (item seq &key (test 'eq))
+  "A simple replacement of CL `position'."
+  (loop for i in seq for index from 0
+     when (funcall test i item) return index))
+
 ;;; Iterators.
 (defmacro ioccur-iter-list (list-obj)
   "Return an iterator from list LIST-OBJ."
@@ -140,27 +147,36 @@ Special commands:
   "Return next elm of ITERATOR."
   (funcall iterator))
 
-(defsubst* ioccur-position (item seq &key (test 'eq))
-  "A simple replacement of CL `position'."
-  (loop for i in seq for index from 0
-     when (funcall test i item) return index))
+(defun ioccur-iter-circular (seq)
+  "Infinite iteration on SEQ."
+  (lexical-let ((it (ioccur-iter-list seq))
+                (lis seq))
+    (lambda ()
+      (let ((elm (iter-next it)))
+        (or elm
+            (progn (setq it (ioccur-iter-list lis)) (iter-next it)))))))
 
-(defun* ioccur-iter-sub-next (seq elm &key (test 'eq))
-  "Create iterator from position of ELM to end of SEQ."
-  (lexical-let* ((pos      (ioccur-position elm seq :test test))
-                 (sub      (nthcdr (1+ pos) seq))
-                 (iterator (ioccur-iter-list sub)))
-     (lambda ()
-       (ioccur-iter-next iterator))))
-
-(defun* ioccur-iter-sub-prec (seq elm &key (test 'eq))
-  "Create iterator from position of ELM to beginning of SEQ."
+(defun* ioccur-sub-prec-circular (seq elm &key (test 'eq))
+  "Infinite reverse iteration of SEQ starting at ELM."
   (lexical-let* ((rev-seq  (reverse seq))
-                 (pos      (ioccur-position elm rev-seq :test test))
-                 (sub      (nthcdr (1+ pos) rev-seq))
+                 (pos      (iter-position elm rev-seq :test test))
+                 (sub      (append (nthcdr (1+ pos) rev-seq) (subseq rev-seq 0 pos)))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
-       (ioccur-iter-next iterator))))
+       (let ((elm (iter-next iterator)))
+         (or elm
+             (progn (setq iterator (ioccur-iter-list sub)) (iter-next iterator)))))))
+
+(defun* ioccur-sub-next-circular (seq elm &key (test 'eq))
+  "Infinite iteration of SEQ starting at ELM."
+  (lexical-let* ((pos      (iter-position elm seq :test test))
+                 (sub      (append (nthcdr (1+ pos) seq) (subseq seq 0 pos)))
+                 (iterator (ioccur-iter-list sub)))
+     (lambda ()
+       (let ((elm (iter-next iterator)))
+         (or elm (progn
+                   (setq iterator (ioccur-iter-list sub))
+                   (iter-next iterator)))))))
 
 (defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'file))
   "Return an alist of all the (num-line line) of a file or buffer BFILE matching REGEXP."
@@ -285,7 +301,7 @@ Special commands:
   (let* ((prompt         (propertize ioccur-search-prompt 'face 'minibuffer-prompt))
          (inhibit-quit   (not (fboundp 'read-key)))
          (tmp-list       ())
-         (it             (ioccur-iter-list ioccur-history))
+         (it             (ioccur-iter-circular ioccur-history))
          (cur-hist-elm   (car ioccur-history))
          (start-hist     nil) ; Flag to notify if cycling history started.
          (old-yank-point start-point)
@@ -294,29 +310,24 @@ Special commands:
       (loop for char across initial-input do (push char tmp-list)))
     (setq ioccur-search-pattern initial-input)
     ;; Cycle history function.
+    ;;
     (flet ((cycle-hist (arg)
              (if ioccur-history
                  (progn
                    ;; Cycle history started
                    ;; We build a new iterator based on a sublist
                    ;; starting at the current element of history.
+                   ;; This is a circular iterator. (no end)
                    (when start-hist
                      (if (< arg 0) ; M-p (move from left to right in ring).
-                         (setq it (ioccur-iter-sub-next ioccur-history
-                                                        cur-hist-elm :test 'equal))
-                         (setq it (ioccur-iter-sub-prec ioccur-history
-                                                        cur-hist-elm :test 'equal))))
+                         (setq it (ioccur-sub-next-circular ioccur-history
+                                                            cur-hist-elm :test 'equal))
+                         (setq it (ioccur-sub-prec-circular ioccur-history
+                                                            cur-hist-elm :test 'equal))))
                    (setq tmp-list nil)
                    (let ((next (ioccur-iter-next it)))
-                     ;; If no more elements in list
-                     ;; rebuild a new iterator based on the whole history list
-                     ;; and restart from beginning or end of list.
-                     (unless next
-                       (setq it (ioccur-iter-list
-                                 (if (< arg 0)
-                                     ioccur-history
-                                     (reverse ioccur-history))))
-                       (setq next (ioccur-iter-next it)) (setq start-hist nil))
+                     (setq next (ioccur-iter-next it))
+                     (setq start-hist nil)
                      (setq initial-input (or next "")))
                    (unless (string= initial-input "")
                      (loop for char across initial-input do (push char tmp-list))
@@ -324,11 +335,13 @@ Special commands:
                    (setq ioccur-search-pattern initial-input)
                    (setq start-hist t))
                  (message "No history available.") (sit-for 2) t))
-           
+           ;; Maybe start timer.
+           ;;
            (start-timer ()
              (unless ioccur-search-timer
                (ioccur-start-timer)))
-           
+           ;; Maybe stop timer.
+           ;;
            (stop-timer ()
              (when ioccur-search-timer
                (ioccur-cancel-search))))
@@ -362,6 +375,8 @@ Special commands:
                   (setq ioccur-exit-and-quit-p t) nil)
                  (?\C-v                        ; Scroll down.
                   (scroll-other-window 1) t)
+                 (?\M-v                        ; Scroll up.
+                  (scroll-other-window -1) t)
                  (?\C-k                        ; Kill input.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
@@ -377,8 +392,6 @@ Special commands:
                   (unless (string= initial-input "")
                     (loop for char across initial-input do (push char tmp-list)))
                   (setq ioccur-search-pattern initial-input) t)
-                 (?\M-v                        ; Scroll up.
-                  (scroll-other-window -1) t)
                  (?\M-p                        ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
