@@ -305,7 +305,8 @@ Special commands:
   (let* ((prompt         (propertize ioccur-search-prompt 'face 'minibuffer-prompt))
          (inhibit-quit   (not (fboundp 'read-key)))
          (tmp-list       ())
-         (it             (ioccur-iter-circular ioccur-history))
+         (it-prec        nil)
+         (it-next        nil)
          (cur-hist-elm   (car ioccur-history))
          (start-hist     nil) ; Flag to notify if cycling history started.
          (old-yank-point start-point)
@@ -327,15 +328,20 @@ Special commands:
                        (progn
                          (if (< arg 0)
                              ;; M-p (move from left to right in hist ring).
-                             (setq it (ioccur-sub-next-circular ioccur-history
-                                                                cur-hist-elm :test 'equal))
+                             (unless it-prec ; Don't rebuild iterator if exists.
+                               (setq it-prec (ioccur-sub-next-circular ioccur-history
+                                                                       cur-hist-elm :test 'equal))
+                               (setq it-next nil)) ; Kill forward iterator.
                              ;; M-n (move from right to left in hist ring).
-                             (setq it (ioccur-sub-prec-circular ioccur-history
-                                                                cur-hist-elm :test 'equal)))
-                         (setq cur-hist-elm (ioccur-iter-next it))
-                         (setq tmp-list nil)
-                         (loop for char across cur-hist-elm do (push char tmp-list))
-                         (setq ioccur-search-pattern cur-hist-elm))
+                             (unless it-next ; Don't rebuild iterator if exists.
+                               (setq it-next (ioccur-sub-prec-circular ioccur-history
+                                                                       cur-hist-elm :test 'equal))
+                               (setq it-prec nil))) ; kill backward iterator.
+                         (let ((it (or it-prec it-next)))
+                           (setq cur-hist-elm (ioccur-iter-next it))
+                           (setq tmp-list nil)
+                           (loop for char across cur-hist-elm do (push char tmp-list))
+                           (setq ioccur-search-pattern cur-hist-elm)))
                        ;; First call use car of history ring.
                        (setq tmp-list nil)
                        (loop for char across cur-hist-elm do (push char tmp-list))
