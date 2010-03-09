@@ -361,6 +361,8 @@ Special commands:
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-search-pattern))))
+               (unless (or (equal char ?\M-p) (equal char ?\M-n))
+                 (setq start-hist nil) (setq cur-hist-elm (car ioccur-history)))
                (case char
                  ((down ?\C-n)                 ; Next line.
                   (stop-timer) (ioccur-next-line)
