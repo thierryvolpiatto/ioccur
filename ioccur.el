@@ -318,26 +318,29 @@ Special commands:
     (flet ((cycle-hist (arg)
              (if ioccur-history
                  (progn
-                   ;; Cycle history started
+                   ;; Cycle history will start at second call,
+                   ;; at first call just use the car of hist ring.
                    ;; We build a new iterator based on a sublist
                    ;; starting at the current element of history.
                    ;; This is a circular iterator. (no end)
-                   (when start-hist
-                     (if (< arg 0) ; M-p (move from left to right in ring).
-                         (setq it (ioccur-sub-next-circular ioccur-history
-                                                            cur-hist-elm :test 'equal))
-                         (setq it (ioccur-sub-prec-circular ioccur-history
-                                                            cur-hist-elm :test 'equal))))
-                   (setq tmp-list nil)
-                   (let ((next (ioccur-iter-next it)))
-                     (setq next (ioccur-iter-next it))
-                     (setq start-hist nil)
-                     (setq initial-input (or next "")))
-                   (unless (string= initial-input "")
-                     (loop for char across initial-input do (push char tmp-list))
-                     (setq cur-hist-elm initial-input))
-                   (setq ioccur-search-pattern initial-input)
-                   (setq start-hist t))
+                   (if start-hist ; At first call start-hist is nil.
+                       (progn
+                         (if (< arg 0)
+                             ;; M-p (move from left to right in hist ring).
+                             (setq it (ioccur-sub-next-circular ioccur-history
+                                                                cur-hist-elm :test 'equal))
+                             ;; M-n (move from right to left in hist ring).
+                             (setq it (ioccur-sub-prec-circular ioccur-history
+                                                                cur-hist-elm :test 'equal)))
+                         (setq cur-hist-elm (ioccur-iter-next it))
+                         (setq tmp-list nil)
+                         (loop for char across cur-hist-elm do (push char tmp-list))
+                         (setq ioccur-search-pattern cur-hist-elm))
+                       ;; First call use car of history ring.
+                       (setq tmp-list nil)
+                       (loop for char across cur-hist-elm do (push char tmp-list))
+                       (setq ioccur-search-pattern cur-hist-elm)
+                       (setq start-hist t)))
                  (message "No history available.") (sit-for 2) t))
            ;; Maybe start timer.
            ;;
