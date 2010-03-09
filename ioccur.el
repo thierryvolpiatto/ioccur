@@ -152,9 +152,9 @@ Special commands:
   (lexical-let ((it  (ioccur-iter-list seq))
                 (lis seq))
     (lambda ()
-      (let ((elm (iter-next it)))
+      (let ((elm (ioccur-iter-next it)))
         (or elm
-            (progn (setq it (ioccur-iter-list lis)) (iter-next it)))))))
+            (progn (setq it (ioccur-iter-list lis)) (ioccur-iter-next it)))))))
 
 (defun ioccur-butlast (seq pos)
   "Return SEQ from index 0 to POS."
@@ -163,24 +163,24 @@ Special commands:
 (defun* ioccur-sub-prec-circular (seq elm &key (test 'eq))
   "Infinite reverse iteration of SEQ starting at ELM."
   (lexical-let* ((rev-seq  (reverse seq))
-                 (pos      (iter-position elm rev-seq :test test))
+                 (pos      (ioccur-position elm rev-seq :test test))
                  (sub      (append (nthcdr (1+ pos) rev-seq) (ioccur-butlast rev-seq pos)))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
-       (let ((elm (iter-next iterator)))
+       (let ((elm (ioccur-iter-next iterator)))
          (or elm
-             (progn (setq iterator (ioccur-iter-list sub)) (iter-next iterator)))))))
+             (progn (setq iterator (ioccur-iter-list sub)) (ioccur-iter-next iterator)))))))
 
 (defun* ioccur-sub-next-circular (seq elm &key (test 'eq))
   "Infinite iteration of SEQ starting at ELM."
-  (lexical-let* ((pos      (iter-position elm seq :test test))
+  (lexical-let* ((pos      (ioccur-position elm seq :test test))
                  (sub      (append (nthcdr (1+ pos) seq) (ioccur-butlast seq pos)))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
-       (let ((elm (iter-next iterator)))
+       (let ((elm (ioccur-iter-next iterator)))
          (or elm (progn
                    (setq iterator (ioccur-iter-list sub))
-                   (iter-next iterator)))))))
+                   (ioccur-iter-next iterator)))))))
 
 (defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'file))
   "Return an alist of all the (num-line line) of a file or buffer BFILE matching REGEXP."
