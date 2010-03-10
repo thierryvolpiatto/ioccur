@@ -126,7 +126,8 @@ Special commands:
     (if ioccur-mode-line-string
         (setq mode-line-format
               '(" " mode-line-buffer-identification " "
-                (line-number-mode "%l") " " ioccur-mode-line-string "-%-"))
+                (line-number-mode "%l") " "
+                ioccur-mode-line-string "-%-"))
         (kill-local-variable 'mode-line-format)))
 
 (defsubst* ioccur-position (item seq &key (test 'eq))
@@ -154,7 +155,8 @@ Special commands:
     (lambda ()
       (let ((elm (ioccur-iter-next it)))
         (or elm
-            (progn (setq it (ioccur-iter-list lis)) (ioccur-iter-next it)))))))
+            (progn (setq it (ioccur-iter-list lis))
+                   (ioccur-iter-next it)))))))
 
 (defun ioccur-butlast (seq pos)
   "Return SEQ from index 0 to POS."
@@ -164,17 +166,20 @@ Special commands:
   "Infinite reverse iteration of SEQ starting at ELM."
   (lexical-let* ((rev-seq  (reverse seq))
                  (pos      (ioccur-position elm rev-seq :test test))
-                 (sub      (append (nthcdr (1+ pos) rev-seq) (ioccur-butlast rev-seq pos)))
+                 (sub      (append (nthcdr (1+ pos) rev-seq)
+                                   (ioccur-butlast rev-seq pos)))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
        (let ((elm (ioccur-iter-next iterator)))
          (or elm
-             (progn (setq iterator (ioccur-iter-list sub)) (ioccur-iter-next iterator)))))))
+             (progn (setq iterator (ioccur-iter-list sub))
+                    (ioccur-iter-next iterator)))))))
 
 (defun* ioccur-sub-next-circular (seq elm &key (test 'eq))
   "Infinite iteration of SEQ starting at ELM."
   (lexical-let* ((pos      (ioccur-position elm seq :test test))
-                 (sub      (append (nthcdr (1+ pos) seq) (ioccur-butlast seq pos)))
+                 (sub      (append (nthcdr (1+ pos) seq)
+                                   (ioccur-butlast seq pos)))
                  (iterator (ioccur-iter-list sub)))
      (lambda ()
        (let ((elm (ioccur-iter-next iterator)))
@@ -198,8 +203,8 @@ Special commands:
          do (incf count)
          finally return lis))))
 
-(defun* ioccur-buffer-process-ext (regex buffer &key (lline ioccur-length-line))
-  "Function to process buffer in external program like anything."
+(defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
+  "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines buffer regex :insert-fn 'buffer)))
     (when matched-lines
@@ -236,7 +241,8 @@ Special commands:
   (let (pos)
     (save-excursion
       (forward-line n) (forward-line 0)
-      (when (looking-at "^ [0-9]+") (forward-line 0) (setq pos (point))))
+      (when (looking-at "^ [0-9]+")
+        (forward-line 0) (setq pos (point))))
   (when pos (goto-char pos) (ioccur-color-current-line))))
 
 ;;;###autoload
@@ -329,13 +335,15 @@ Special commands:
                          (if (< arg 0)
                              ;; M-p (move from left to right in hist ring).
                              (unless it-prec ; Don't rebuild iterator if exists.
-                               (setq it-prec (ioccur-sub-next-circular ioccur-history
-                                                                       cur-hist-elm :test 'equal))
+                               (setq it-prec (ioccur-sub-next-circular
+                                              ioccur-history
+                                              cur-hist-elm :test 'equal))
                                (setq it-next nil)) ; Kill forward iterator.
                              ;; M-n (move from right to left in hist ring).
                              (unless it-next ; Don't rebuild iterator if exists.
-                               (setq it-next (ioccur-sub-prec-circular ioccur-history
-                                                                       cur-hist-elm :test 'equal))
+                               (setq it-next (ioccur-sub-prec-circular
+                                              ioccur-history
+                                              cur-hist-elm :test 'equal))
                                (setq it-prec nil))) ; kill backward iterator.
                          (let ((it (or it-prec it-next)))
                            (setq cur-hist-elm (ioccur-iter-next it))
@@ -426,19 +434,21 @@ Special commands:
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
 
-(defun ioccur-filter-alist-by-regexp (regexp buffer-name)
+(defun ioccur-update-buffer (regexp buffer-name)
   "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
         (progn (erase-buffer) (insert (concat title "\n\n")))
         (erase-buffer)
-        (ioccur-buffer-process-ext regexp buffer-name :lline ioccur-length-line)
+        (ioccur-print-buffer regexp buffer-name :lline ioccur-length-line)
         (goto-char (point-min))
         (insert (concat title "\n\n"
-                 (propertize (format "Found %s occurences of " ioccur-count-occurences)
-                             'face 'underline)
-                 (propertize regexp 'face 'ioccur-regexp-face)
-                 (propertize (format " in %s" buffer-name) 'face 'underline) "\n\n"))
+                        (propertize (format "Found %s occurences of "
+                                            ioccur-count-occurences)
+                                    'face 'underline)
+                        (propertize regexp 'face 'ioccur-regexp-face)
+                        (propertize
+                         (format " in %s" buffer-name) 'face 'underline) "\n\n"))
         (ioccur-color-current-line))))
 
 
@@ -448,7 +458,7 @@ Special commands:
         (run-with-idle-timer
          ioccur-search-delay 'repeat
          #'(lambda ()
-             (ioccur-filter-alist-by-regexp
+             (ioccur-update-buffer
               ioccur-search-pattern
               ioccur-current-buffer)))))
 
@@ -531,7 +541,8 @@ for commands provided in the search buffer."
                 (push (pop (nthcdr pos-hist-elm ioccur-history))
                       ioccur-history)))
             (when (> (length ioccur-history) ioccur-max-length-history)
-              (setq ioccur-history (delete (car (last ioccur-history)) ioccur-history))))
+              (setq ioccur-history (delete (car (last ioccur-history))
+                                           ioccur-history))))
         (setq ioccur-count-occurences 0)
         (setq ioccur-quit-flag nil)))))
 
