@@ -43,6 +43,8 @@
     (define-key map (kbd "RET") 'ioccur-jump-and-quit)
     (define-key map (kbd "<C-down>") 'ioccur-scroll-down)
     (define-key map (kbd "<C-up>") 'ioccur-scroll-up)
+    (define-key map (kbd "C-v") 'ioccur-scroll-other-window-up)
+    (define-key map (kbd "M-v") 'ioccur-scroll-other-window-down)
     (define-key map (kbd "<down>") 'ioccur-next-line)
     (define-key map (kbd "<up>") 'ioccur-precedent-line)
     (define-key map (kbd "C-n") 'ioccur-next-line)
@@ -187,8 +189,8 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'file))
-  "Return an alist of all the (num-line line) of a file or buffer BFILE matching REGEXP."
+(defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'buffer))
+  "Return an alist of all the (numline line)  matching REGEXP."
   (let ((count 0)
         (fn    (case insert-fn
                  ('file 'insert-file-contents)
@@ -206,11 +208,12 @@ Special commands:
 (defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
-  (let ((matched-lines (ioccur-find-readlines buffer regex :insert-fn 'buffer)))
+  (let ((matched-lines (ioccur-find-readlines buffer regex)))
     (when matched-lines
       (dolist (i matched-lines) ; Each element is of the form '(key value)
         (let* ((ltp           (second i))
-               (replace-reg   (if (string-match "^\t" ltp) "\\(^\t*\\)" "\\(^ *\\)"))
+               (replace-reg   (if (string-match "^\t" ltp)
+                                  "\\(^\t*\\)" "\\(^ *\\)"))
                (new-ltp       (replace-regexp-in-string replace-reg "" ltp))
                (line-to-print new-ltp))
           (incf ioccur-count-occurences)
@@ -279,6 +282,16 @@ Special commands:
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
 
+(defun ioccur-scroll-other-window-down ()
+  "Scroll other window down."
+  (interactive)
+  (scroll-other-window 1))
+
+(defun ioccur-scroll-other-window-up ()
+  "Scroll other window up."
+  (interactive)
+  (scroll-other-window -1))
+
 (defun ioccur-scroll (n)
   "Scroll other buffer and move overlay accordingly."
   (ioccur-forward-line n)
@@ -299,7 +312,7 @@ Special commands:
   (ioccur-scroll -1))
 
 (defun ioccur-read-char-or-event (prompt)
-  "Read keyboard input with `read-char' and `read-event' if `read-key' not available."
+  "Replace `read-key' when  not available."
   (if (fboundp 'read-key)
       (read-key prompt)
       (let* ((chr (condition-case nil (read-char prompt) (error nil)))
@@ -308,7 +321,8 @@ Special commands:
 
 (defun ioccur-read-search-input (initial-input start-point)
   "Read each keyboard input and add it to `ioccur-search-pattern'."
-  (let* ((prompt         (propertize ioccur-search-prompt 'face 'minibuffer-prompt))
+  (let* ((prompt         (propertize ioccur-search-prompt
+                                     'face 'minibuffer-prompt))
          (inhibit-quit   (not (fboundp 'read-key)))
          (tmp-list       ())
          (it-prec        nil)
@@ -348,11 +362,13 @@ Special commands:
                          (let ((it (or it-prec it-next)))
                            (setq cur-hist-elm (ioccur-iter-next it))
                            (setq tmp-list nil)
-                           (loop for char across cur-hist-elm do (push char tmp-list))
+                           (loop for char across cur-hist-elm
+                              do (push char tmp-list))
                            (setq ioccur-search-pattern cur-hist-elm)))
                        ;; First call use car of history ring.
                        (setq tmp-list nil)
-                       (loop for char across cur-hist-elm do (push char tmp-list))
+                       (loop for char across cur-hist-elm
+                          do (push char tmp-list))
                        (setq ioccur-search-pattern cur-hist-elm)
                        (setq start-hist t)))
                  (message "No history available.") (sit-for 2) t))
@@ -372,63 +388,64 @@ Special commands:
                (unless (or (equal char ?\M-p) (equal char ?\M-n))
                  (setq start-hist nil) (setq cur-hist-elm (car ioccur-history)))
                (case char
-                 ((down ?\C-n)                 ; Next line.
+                 ((down ?\C-n)       ; Next line.
                   (stop-timer) (ioccur-next-line)
                   (ioccur-color-current-line) t)
-                 ((up ?\C-p)                   ; Precedent line.
+                 ((up ?\C-p)         ; Precedent line.
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
-                 (C-down                       ; Scroll both windows down.
+                 (C-down             ; Scroll both windows down.
                   (stop-timer)
                   (ioccur-scroll-down) t)
-                 (C-up                         ; Scroll both windows up.
+                 (C-up               ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
-                 ((?\e ?\r) (message nil) nil) ; RET or ESC break and exit code.
-                 (?\d                          ; Delete backward with DEL.
+                 ((?\e ?\r)          ; RET or ESC break and exit code.
+                  (message nil) nil)
+                 (?\d                ; Delete backward with DEL.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
                   (pop tmp-list) t)
-                 (?\C-g                        ; Quit and restore buffers.
+                 (?\C-g              ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
-                 ((or right ?\C-z)             ; Persistent action.
+                 ((or right ?\C-z)   ; Persistent action.
                   (ioccur-jump) (other-window 1) t)
-                 ((left ?\C-j)                 ; Jump to candidate and kill search buffer.
+                 ((left ?\C-j)       ; Jump to candidate and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
-                 (?\C-v                        ; Scroll down.
-                  (scroll-other-window 1) t)
-                 (?\M-v                        ; Scroll up.
-                  (scroll-other-window -1) t)
-                 (?\C-k                        ; Kill input.
+                 (?\C-v              ; Scroll down.
+                  (ioccur-scroll-other-window-down) t)
+                 (?\M-v              ; Scroll up.
+                  (ioccur-scroll-other-window-up) t)
+                 (?\C-k              ; Kill input.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
                   (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
-                 (?\C-w                        ; Yank stuff at point.
+                 (?\C-w              ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (unless old-yank-point (setq old-yank-point (point)))
                     (setq yank-point (point)) (forward-word 1)
                     (setq initial-input (buffer-substring yank-point (point))))
                   (unless (string= initial-input "")
-                    (loop for char across initial-input do (push char tmp-list)))
+                    (loop for char across initial-input
+                       do (push char tmp-list)))
                   (setq ioccur-search-pattern initial-input) t)
-                 (?\M-p                        ; Precedent history elm.
+                 (?\M-p              ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
-                 (?\M-n                        ; Next history elm.
+                 (?\M-n              ; Next history elm.
                   (start-timer)
                   (cycle-hist 1))
-                 (t                            ; Store character.
+                 (t                  ; Store character.
                   (start-timer)
                   (if (characterp char)
                       (push char tmp-list)
-                      ;; Else, a non--character event is entered, not listed above.
-                      ;; add it to `unread-command-events' and exit (nil) .
                       (setq unread-command-events
-                            (nconc (mapcar 'identity (this-single-command-raw-keys))
+                            (nconc (mapcar 'identity
+                                           (this-single-command-raw-keys))
                                    unread-command-events))
                       nil))))
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
@@ -448,7 +465,8 @@ Special commands:
                                     'face 'underline)
                         (propertize regexp 'face 'ioccur-regexp-face)
                         (propertize
-                         (format " in %s" buffer-name) 'face 'underline) "\n\n"))
+                         (format " in %s" buffer-name)
+                         'face 'underline) "\n\n"))
         (ioccur-color-current-line))))
 
 
