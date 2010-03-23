@@ -59,7 +59,7 @@
   :group 'text)
 
 ;;; User variables.
-(defcustom ioccur-search-delay 0.2
+(defcustom ioccur-search-delay 0.5
   "*During incremental searching, display is updated all these seconds."
   :group 'ioccur
   :type  'integer)
