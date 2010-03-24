@@ -423,6 +423,12 @@ Special commands:
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
                   (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
+                 (?\C-y              ; Yank from `kill-ring'.
+                  (setq initial-input (car kill-ring))
+                  (unless (string= initial-input "")
+                    (loop for char across initial-input
+                       do (push char tmp-list)))
+                  (setq ioccur-search-pattern initial-input) t)
                  (?\C-w              ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
