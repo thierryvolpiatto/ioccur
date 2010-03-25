@@ -41,6 +41,9 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") 'ioccur-quit)
     (define-key map (kbd "RET") 'ioccur-jump-and-quit)
+    (define-key map (kbd "<left>") 'ioccur-jump-and-quit)
+    (define-key map (kbd "<right>") 'ioccur-jump-without-quit)
+    (define-key map (kbd "C-z") 'ioccur-jump-without-quit)
     (define-key map (kbd "<C-down>") 'ioccur-scroll-down)
     (define-key map (kbd "<C-up>") 'ioccur-scroll-up)
     (define-key map (kbd "C-v") 'ioccur-scroll-other-window-up)
@@ -282,6 +285,11 @@ Special commands:
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
 
+(defun ioccur-jump-without-quit ()
+  "Jump to line in `ioccur-current-buffer' without quiting."
+  (interactive)
+  (ioccur-jump) (other-window 1))
+
 (defun ioccur-scroll-other-window-down ()
   "Scroll other window down."
   (interactive)
@@ -410,7 +418,7 @@ Special commands:
                  (?\C-g              ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
                  ((or right ?\C-z)   ; Persistent action.
-                  (ioccur-jump) (other-window 1) t)
+                  (ioccur-jump-without-quit) t)
                  ((left ?\C-j)       ; Jump to candidate and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
                  (?\C-v              ; Scroll down.
