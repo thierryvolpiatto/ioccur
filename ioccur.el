@@ -324,7 +324,7 @@ Special commands:
   (if (fboundp 'read-key)
       (read-key prompt)
       (let* ((chr (condition-case nil (read-char prompt) (error nil)))
-             (evt (unless chr (read-event))))
+             (evt (unless chr (read-event prompt))))
         (or chr evt))))
 
 (defun ioccur-read-search-input (initial-input start-point)
