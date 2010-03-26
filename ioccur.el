@@ -321,6 +321,19 @@ Special commands:
   (interactive)
   (ioccur-scroll -1))
 
+;;;###autoload
+(defun ioccur-split-window ()
+  "Toggle split window, vertically or horizontally."
+  (interactive)
+  (with-current-buffer ioccur-current-buffer
+    (let ((old-size (window-height)))
+      (delete-window)
+      (set-window-buffer
+       (select-window (if (= (window-height) old-size)
+                          (split-window-vertically)
+                          (split-window-horizontally)))
+       (get-buffer "*ioccur*")))))
+
 (defun ioccur-read-char-or-event (prompt)
   "Replace `read-key' when  not available."
   (if (fboundp 'read-key)
@@ -429,6 +442,8 @@ Special commands:
                   (ioccur-scroll-other-window-down) t)
                  ((?\C-t ?\M-v)              ; Scroll up.
                   (ioccur-scroll-other-window-up) t)
+                 (?\C-|              ; Toggle split window.
+                  (ioccur-split-window) t)
                  (?\C-k              ; Kill input.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
