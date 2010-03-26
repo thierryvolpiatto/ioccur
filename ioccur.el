@@ -73,7 +73,9 @@
   :type  'string)
 
 (defcustom ioccur-mode-line-string
-  " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-down/up:Scroll, C-w:Yank tap"
+  (if (window-system)
+      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-down/up:Follow, C-w:Yank tap"
+      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-d/u:Follow, C-w:Yank tap")
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
@@ -393,7 +395,9 @@ Special commands:
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-search-pattern))))
-               (unless (or (equal char ?\M-p) (equal char ?\M-n))
+               (unless (or (equal char ?\M-p) (equal char ?\M-n)
+                           ;; Handle Meta in terms.
+                           (equal char ?\^\[) (equal char ?\^\[))
                  (setq start-hist nil) (setq cur-hist-elm (car ioccur-history)))
                (case char
                  ((down ?\C-n)       ; Next line.
@@ -402,12 +406,12 @@ Special commands:
                  ((up ?\C-p)         ; Precedent line.
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
-                 (C-down             ; Scroll both windows down.
+                 ((?\C-d C-down)     ; Scroll both windows down.
                   (stop-timer)
                   (ioccur-scroll-down) t)
-                 (C-up               ; Scroll both windows up.
+                 ((?\C-u C-up)       ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
-                 ((?\e ?\r)          ; RET or ESC break and exit code.
+                 (?\r                ; RET break and exit code.
                   (message nil) nil)
                  (?\d                ; Delete backward with DEL.
                   (start-timer)
@@ -423,7 +427,7 @@ Special commands:
                   (setq ioccur-exit-and-quit-p t) nil)
                  (?\C-v              ; Scroll down.
                   (ioccur-scroll-other-window-down) t)
-                 (?\M-v              ; Scroll up.
+                 ((?\C-t ?\M-v)              ; Scroll up.
                   (ioccur-scroll-other-window-up) t)
                  (?\C-k              ; Kill input.
                   (start-timer)
@@ -447,10 +451,10 @@ Special commands:
                     (loop for char across initial-input
                        do (push char tmp-list)))
                   (setq ioccur-search-pattern initial-input) t)
-                 (?\M-p              ; Precedent history elm.
+                 ((?\^\[ ?\M-p)      ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
-                 (?\M-n              ; Next history elm.
+                 ((?\^\[ ?\M-n)      ; Next history elm.
                   (start-timer)
                   (cycle-hist 1))
                  (t                  ; Store character.
@@ -514,6 +518,8 @@ C-k            Kill current input.
 C-w            Yank stuff at point.
 C-g            quit and restore buffer.
 M-p/n          Precedent and next `ioccur-history' element:
+C-down         Follow in other buffer.
+C-up           Follow in other buffer.
 
 M-p ,-->A B C D E F G H I---,
     |                       |
@@ -523,6 +529,12 @@ M-n ,-->I H G F E D C B A---,
     |                       |
     `---A B C D E F G H I<--'
 
+Special NOTE for terms:
+=======================
+  C-down/up in addition with M-n/p are bound to history.
+  C-d/u are for following in other buffer.
+  Use C-t to Scroll up.
+ 
 When you quit incremental search with RET or ESC, see `ioccur-mode'
 for commands provided in the search buffer."
   (interactive "P")
