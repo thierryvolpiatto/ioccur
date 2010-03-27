@@ -75,7 +75,7 @@
 (defcustom ioccur-mode-line-string
   (if (window-system)
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-down/up:Follow, C-w:Yank tap"
-      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v C-d/u:Follow, C-w:Yank tap")
+      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
@@ -408,55 +408,54 @@ Special commands:
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-search-pattern))))
-               (unless (or (equal char ?\M-p) (equal char ?\M-n)
-                           ;; Handle Meta in terms.
-                           (equal char ?\^\[) (equal char ?\^\[))
-                 (setq start-hist nil) (setq cur-hist-elm (car ioccur-history)))
                (case char
-                 ((down ?\C-n)       ; Next line.
+                 ((not (?\M-p ?\M-n ?\t C-tab)) ; Reset history
+                  (setq start-hist nil)
+                  (setq cur-hist-elm (car ioccur-history)) t)
+                 ((down ?\C-n)                  ; Next line.
                   (stop-timer) (ioccur-next-line)
                   (ioccur-color-current-line) t)
-                 ((up ?\C-p)         ; Precedent line.
+                 ((up ?\C-p)                    ; Precedent line.
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
-                 ((?\C-d C-down)     ; Scroll both windows down.
+                 ((?\C-d C-down)                ; Scroll both windows down.
                   (stop-timer)
                   (ioccur-scroll-down) t)
-                 ((?\C-u C-up)       ; Scroll both windows up.
+                 ((?\C-u C-up)                  ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
-                 (?\r                ; RET break and exit code.
+                 (?\r                           ; RET break and exit code.
                   (message nil) nil)
-                 (?\d                ; Delete backward with DEL.
+                 (?\d                           ; Delete backward with DEL.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
                   (pop tmp-list) t)
-                 (?\C-g              ; Quit and restore buffers.
+                 (?\C-g                         ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
-                 ((or right ?\C-z)   ; Persistent action.
+                 ((or right ?\C-z)              ; Persistent action.
                   (ioccur-jump-without-quit) t)
-                 ((left ?\C-j)       ; Jump to candidate and kill search buffer.
+                 ((left ?\C-j)                  ; Jump to candidate and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
-                 (?\C-v              ; Scroll down.
+                 (?\C-v                         ; Scroll down.
                   (ioccur-scroll-other-window-down) t)
-                 ((?\C-t ?\M-v)              ; Scroll up.
+                 ((?\C-t ?\M-v)                 ; Scroll up.
                   (ioccur-scroll-other-window-up) t)
-                 (?\C-|              ; Toggle split window.
+                 (?\C-|                         ; Toggle split window.
                   (ioccur-split-window) t)
-                 (?\C-k              ; Kill input.
+                 (?\C-k                         ; Kill input.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
                   (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
-                 (?\C-y              ; Yank from `kill-ring'.
+                 (?\C-y                         ; Yank from `kill-ring'.
                   (setq initial-input (car kill-ring))
                   (unless (string= initial-input "")
                     (loop for char across initial-input
                        do (push char tmp-list)))
                   (setq ioccur-search-pattern initial-input) t)
-                 (?\C-w              ; Yank stuff at point.
+                 (?\C-w                         ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (unless old-yank-point (setq old-yank-point (point)))
@@ -466,13 +465,13 @@ Special commands:
                     (loop for char across initial-input
                        do (push char tmp-list)))
                   (setq ioccur-search-pattern initial-input) t)
-                 ((?\^\[ ?\M-p)      ; Precedent history elm.
+                 ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
-                 ((?\^\[ ?\M-n)      ; Next history elm.
+                 ((backtab ?\M-n)                 ; Next history elm.
                   (start-timer)
                   (cycle-hist 1))
-                 (t                  ; Store character.
+                 (t                             ; Store character.
                   (start-timer)
                   (if (characterp char)
                       (push char tmp-list)
@@ -517,7 +516,6 @@ Special commands:
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
-
 With a prefix arg search symbol at point (INITIAL-INPUT).
 
 While you are incremental searching, commands provided are:
@@ -527,14 +525,14 @@ C-p or <up>    precedent line.
 C-v and M-v    scroll up and down.
 C-z or <right> jump without quitting loop.
 C-j or <left>  jump and exit search buffer.
-RET or ESC     exit but don't quit search buffer.
+RET            exit but don't quit search buffer.
 DEL            remove last character entered.
 C-k            Kill current input.
 C-w            Yank stuff at point.
 C-g            quit and restore buffer.
-M-p/n          Precedent and next `ioccur-history' element:
 C-down         Follow in other buffer.
 C-up           Follow in other buffer.
+M-p/n          Precedent and next `ioccur-history' element:
 
 M-p ,-->A B C D E F G H I---,
     |                       |
@@ -546,11 +544,11 @@ M-n ,-->I H G F E D C B A---,
 
 Special NOTE for terms:
 =======================
-  C-down/up in addition with M-n/p are bound to history.
+  tab/S-tab are bound to history.
   C-d/u are for following in other buffer.
   Use C-t to Scroll up.
  
-When you quit incremental search with RET or ESC, see `ioccur-mode'
+When you quit incremental search with RET, see `ioccur-mode'
 for commands provided in the search buffer."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
