@@ -433,13 +433,13 @@ Special commands:
                   (pop tmp-list) t)
                  (?\C-g                         ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
-                 ((or right ?\C-z)              ; Persistent action.
+                 ((right ?\C-z)                 ; Persistent action.
                   (ioccur-jump-without-quit) t)
                  ((left ?\C-j)                  ; Jump to candidate and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
-                 (?\C-v                         ; Scroll down.
+                 ((next ?\C-v)                  ; Scroll down.
                   (ioccur-scroll-other-window-down) t)
-                 ((?\C-t ?\M-v)                 ; Scroll up.
+                 ((?\C-t ?\M-v prior)           ; Scroll up.
                   (ioccur-scroll-other-window-up) t)
                  (?\C-|                         ; Toggle split window.
                   (ioccur-split-window) t)
@@ -468,7 +468,7 @@ Special commands:
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
-                 ((backtab ?\M-n)                 ; Next history elm.
+                 ((backtab ?\M-n)               ; Next history elm.
                   (start-timer)
                   (cycle-hist 1))
                  (t                             ; Store character.
