@@ -315,16 +315,19 @@ Special commands:
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
 
+;;;###autoload
 (defun ioccur-jump-without-quit ()
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
   (ioccur-jump) (other-window 1))
 
+;;;###autoload
 (defun ioccur-scroll-other-window-down ()
   "Scroll other window down."
   (interactive)
   (scroll-other-window 1))
 
+;;;###autoload
 (defun ioccur-scroll-other-window-up ()
   "Scroll other window up."
   (interactive)
