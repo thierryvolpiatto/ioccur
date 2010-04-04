@@ -295,15 +295,12 @@ Special commands:
 
 (defun ioccur-jump ()
   "Jump to line in other buffer and put an overlay on it."
-  (let ((line (buffer-substring (point-at-bol) (point-at-eol)))
-        pos)
+  (let* ((line (buffer-substring (point-at-bol) (point-at-eol)))
+         (pos  (string-to-number line)))
     (unless (or (string= line "")
                 (string= line "Ioccur"))
-      (when (string-match "[0-9]+" line)
-        (setq pos (string-to-number (match-string 0 line))))
       (pop-to-buffer ioccur-current-buffer)
       (ioccur-goto-line pos) (ioccur-color-matched-line))))
-
 
 ;;;###autoload
 (defun ioccur-jump-and-quit ()
