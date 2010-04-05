@@ -76,8 +76,10 @@
 
 (defcustom ioccur-mode-line-string
   (if (window-system)
-      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
-      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
+      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
+C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
+      " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
+C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
@@ -94,23 +96,28 @@ Set it to nil to remove doc in mode-line."
   :type 'integer)
 
 ;;; Faces.
-(defface ioccur-overlay-face '((t (:background "Green4" :underline t)))
+(defface ioccur-overlay-face
+    '((t (:background "Green4" :underline t)))
   "Face for highlight line in ioccur buffer."
   :group 'ioccur-faces)
 
-(defface ioccur-match-overlay-face '((t (:background "Indianred4" :underline t)))
+(defface ioccur-match-overlay-face
+    '((t (:background "Indianred4" :underline t)))
   "Face for highlight line in matched buffer."
   :group 'ioccur-faces)
 
-(defface ioccur-title-face '((t (:background "Dodgerblue4")))
+(defface ioccur-title-face
+    '((t (:background "Dodgerblue4")))
   "Face for highlight incremental buffer title."
   :group 'ioccur-faces)
 
-(defface ioccur-regexp-face '((t (:background "DeepSkyBlue" :underline t)))
+(defface ioccur-regexp-face
+    '((t (:background "DeepSkyBlue" :underline t)))
   "Face for highlight found regexp in incremental buffer."
   :group 'ioccur-faces)
 
-(defface ioccur-num-line-face '((t (:foreground "OrangeRed")))
+(defface ioccur-num-line-face
+    '((t (:foreground "OrangeRed")))
   "Face for highlight number line in ioccur buffer."
   :group 'ioccur-faces)
 
@@ -470,7 +477,7 @@ Move point to first occurence of `ioccur-search-pattern'."
                   (setq ioccur-quit-flag t) nil)
                  ((right ?\C-z)                 ; Persistent action.
                   (ioccur-jump-without-quit) t)
-                 ((left ?\C-j)                  ; Jump to candidate and kill search buffer.
+                 ((left ?\C-j)                  ; Jump and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
                  ((next ?\C-v)                  ; Scroll down.
                   (ioccur-scroll-other-window-down) t)
@@ -628,9 +635,11 @@ for commands provided in the search buffer."
                 (unless (or (member ioccur-search-pattern ioccur-history)
                             (string= ioccur-search-pattern ""))
                   (push ioccur-search-pattern ioccur-history))
-                ;; If elm already exists in history ring push it on top of stack.
-                (let ((pos-hist-elm (ioccur-position ioccur-search-pattern
-                                                     ioccur-history :test 'equal)))
+                ;; If elm already exists in history ring
+                ;; push it on top of stack.
+                (let ((pos-hist-elm (ioccur-position
+                                     ioccur-search-pattern
+                                     ioccur-history :test 'equal)))
                   (unless (string= (car ioccur-history)
                                    ioccur-search-pattern)
                     (push (pop (nthcdr pos-hist-elm ioccur-history))
