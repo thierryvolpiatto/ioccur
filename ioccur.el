@@ -294,13 +294,20 @@ Special commands:
   (ioccur-forward-line -1))
 
 (defun ioccur-jump ()
-  "Jump to line in other buffer and put an overlay on it."
+  "Jump to line in other buffer and put an overlay on it.
+Move point to first occurence of `ioccur-search-pattern'."
   (let* ((line (buffer-substring (point-at-bol) (point-at-eol)))
          (pos  (string-to-number line)))
     (unless (or (string= line "")
                 (string= line "Ioccur"))
       (pop-to-buffer ioccur-current-buffer)
-      (ioccur-goto-line pos) (ioccur-color-matched-line))))
+      (ioccur-goto-line pos)
+      ;; Go to beginning of first occurence in this line
+      ;; of what match `ioccur-search-pattern'.
+      (when (re-search-forward ioccur-search-pattern (point-at-eol) t)
+        (forward-char 1)
+        (re-search-backward ioccur-search-pattern (point-at-bol) t))
+      (ioccur-color-matched-line))))
 
 ;;;###autoload
 (defun ioccur-jump-and-quit ()
