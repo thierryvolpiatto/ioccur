@@ -312,7 +312,6 @@ Move point to first occurence of `ioccur-search-pattern'."
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-search-pattern'.
       (when (re-search-forward ioccur-search-pattern (point-at-eol) t)
-        (forward-char 1)
         (re-search-backward ioccur-search-pattern (point-at-bol) t))
       (ioccur-color-matched-line))))
 
