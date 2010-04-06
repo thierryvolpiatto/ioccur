@@ -564,8 +564,8 @@ C-n or <down>  next line.
 C-p or <up>    precedent line.
 C-v and M-v    scroll up and down.
 C-z or <right> jump without quitting loop.
-C-j or <left>  jump and exit search buffer.
-RET            exit but don't quit search buffer.
+C-j or <left>  jump and kill `ioccur-buffer'.
+RET            exit keeping `ioccur-buffer'.
 DEL            remove last character entered.
 C-k            Kill current input.
 C-w            Yank stuff at point.
@@ -589,7 +589,7 @@ Special NOTE for terms:
   Use C-t to Scroll up.
  
 When you quit incremental search with RET, see `ioccur-mode'
-for commands provided in the search buffer."
+for commands provided in the `ioccur-buffer'."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
