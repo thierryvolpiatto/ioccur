@@ -618,37 +618,38 @@ for commands provided in the `ioccur-buffer'."
             (kill-local-variable 'mode-line-format)
             (when (equal (buffer-substring (point-at-bol) (point-at-eol)) "")
               (setq ioccur-quit-flag t))
-            (if ioccur-quit-flag        ; C-g
-                (progn
-                  (kill-buffer ioccur-buffer)
-                  (switch-to-buffer ioccur-current-buffer)
-                  (when ioccur-match-overlay
-                    (delete-overlay ioccur-match-overlay))
-                  (delete-other-windows) (goto-char curpos) (message nil))
-
-                (if ioccur-exit-and-quit-p
-                    (progn (ioccur-jump-and-quit)
-                           (kill-buffer ioccur-buffer) (message nil))
-                    (ioccur-jump) (other-window 1))
-                ;; Push elm in history if not already there or empty.
-                (unless (or (member ioccur-search-pattern ioccur-history)
-                            (string= ioccur-search-pattern ""))
-                  (push ioccur-search-pattern ioccur-history))
-                ;; If elm already exists in history ring
-                ;; push it on top of stack.
-                (let ((pos-hist-elm (ioccur-position
-                                     ioccur-search-pattern
-                                     ioccur-history :test 'equal)))
-                  (unless (string= (car ioccur-history)
-                                   ioccur-search-pattern)
-                    (push (pop (nthcdr pos-hist-elm ioccur-history))
-                          ioccur-history)))
-                (when (> (length ioccur-history) ioccur-max-length-history)
-                  (setq ioccur-history (delete (car (last ioccur-history))
-                                               ioccur-history))))
+            (cond (ioccur-quit-flag       ; C-g hit.
+                   (kill-buffer ioccur-buffer)
+                   (switch-to-buffer ioccur-current-buffer)
+                   (when ioccur-match-overlay
+                     (delete-overlay ioccur-match-overlay))
+                   (delete-other-windows) (goto-char curpos) (message nil))
+                  (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
+                   (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
+                   (message nil) (ioccur-save-history))
+                  (t                      ; Jump keeping `ioccur-buffer'.
+                   (ioccur-jump) (other-window 1) (ioccur-save-history)))
             (setq ioccur-count-occurences 0)
             (setq ioccur-quit-flag nil))))))
 
+(defun ioccur-save-history ()
+  "Save last ioccur element found in `ioccur-history'."
+  ;; Push elm in history if not already there or empty.
+  (unless (or (member ioccur-search-pattern ioccur-history)
+              (string= ioccur-search-pattern ""))
+    (push ioccur-search-pattern ioccur-history))
+  ;; If elm already exists in history ring
+  ;; push it on top of stack.
+  (let ((pos-hist-elm (ioccur-position
+                       ioccur-search-pattern
+                       ioccur-history :test 'equal)))
+    (unless (string= (car ioccur-history)
+                     ioccur-search-pattern)
+      (push (pop (nthcdr pos-hist-elm ioccur-history))
+            ioccur-history)))
+  (when (> (length ioccur-history) ioccur-max-length-history)
+    (setq ioccur-history (delete (car (last ioccur-history))
+                                 ioccur-history))))
 
 (defun ioccur-cancel-search ()
   "Cancel timer used for ioccur searching."
