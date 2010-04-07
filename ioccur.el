@@ -436,6 +436,13 @@ Move point to first occurence of `ioccur-search-pattern'."
                        (setq ioccur-search-pattern cur-hist-elm)
                        (setq start-hist t)))
                  (message "No history available.") (sit-for 2) t))
+           ;; Insert INITIAL-INPUT.
+           ;;
+           (insert-initial-input ()
+             (unless (string= initial-input "")
+               (loop for char across initial-input
+                  do (push char tmp-list)))
+             (setq ioccur-search-pattern initial-input))
            ;; Maybe start timer.
            ;;
            (start-timer ()
@@ -492,20 +499,14 @@ Move point to first occurence of `ioccur-search-pattern'."
                   (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
                  (?\C-y                         ; Yank from `kill-ring'.
                   (setq initial-input (car kill-ring))
-                  (unless (string= initial-input "")
-                    (loop for char across initial-input
-                       do (push char tmp-list)))
-                  (setq ioccur-search-pattern initial-input) t)
+                  (insert-initial-input) t)
                  (?\C-w                         ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     (unless old-yank-point (setq old-yank-point (point)))
                     (setq yank-point (point)) (forward-word 1)
                     (setq initial-input (buffer-substring yank-point (point))))
-                  (unless (string= initial-input "")
-                    (loop for char across initial-input
-                       do (push char tmp-list)))
-                  (setq ioccur-search-pattern initial-input) t)
+                  (insert-initial-input) t)
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
