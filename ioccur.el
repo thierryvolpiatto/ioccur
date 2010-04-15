@@ -456,6 +456,7 @@ Move point to first occurence of `ioccur-search-pattern'."
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-search-pattern))))
+               (message nil)
                (case char
                  ((not (?\M-p ?\M-n ?\t C-tab)) ; Reset history
                   (setq start-hist nil)
@@ -472,7 +473,7 @@ Move point to first occurence of `ioccur-search-pattern'."
                  ((?\C-u C-up)                  ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
                  (?\r                           ; RET break and exit code.
-                  (message nil) nil)
+                  nil)
                  (?\d                           ; Delete backward with DEL.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
