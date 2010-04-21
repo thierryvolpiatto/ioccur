@@ -247,13 +247,14 @@ Special commands:
   "Can i see this buffer in this window."
   (let ((buf        (current-buffer))
         (cur-w-conf (current-window-configuration)))
-    (save-window-excursion
-      (pop-to-buffer buffer)
-      (pop-to-buffer buf)
-      ;; If BUFFER is NOT in same window than BUF
-      ;; We should have now another window configuration.
-      (compare-window-configurations
-       cur-w-conf (current-window-configuration)))))
+    (or (eq buf (get-buffer buffer))
+        (save-window-excursion
+          (pop-to-buffer buffer)
+          (pop-to-buffer buf)
+          ;; If BUFFER is NOT in same window than BUF
+          ;; We should have now another window configuration.
+          (compare-window-configurations
+           cur-w-conf (current-window-configuration))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
