@@ -241,20 +241,6 @@ Special commands:
                               line-to-print)
                           "\n")))))))
 
-;; FIXME: Don't work correctly with one buffer splitted in two
-;; and an other buffer.
-(defun ioccur-visible-buffer-p (buffer)
-  "Can i see this buffer in this window."
-  (let ((buf        (current-buffer))
-        (cur-w-conf (current-window-configuration)))
-    (or (eq buf (get-buffer buffer))
-        (save-window-excursion
-          (pop-to-buffer buffer)
-          (pop-to-buffer buf)
-          ;; If BUFFER is NOT in same window than BUF
-          ;; We should have now another window configuration.
-          (compare-window-configurations
-           cur-w-conf (current-window-configuration))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
@@ -598,7 +584,7 @@ for commands provided in the `ioccur-buffer'."
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (if (and (get-buffer ioccur-buffer)
-           (not (ioccur-visible-buffer-p ioccur-buffer)))
+           (not (get-buffer-window ioccur-buffer)))
       (pop-to-buffer ioccur-buffer t)
       (with-current-buffer ioccur-current-buffer
         (jit-lock-fontify-now))
