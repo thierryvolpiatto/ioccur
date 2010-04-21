@@ -241,11 +241,13 @@ Special commands:
                               line-to-print)
                           "\n")))))))
 
+;; FIXME: Don't work correctly with one buffer splitted in two
+;; and an other buffer.
 (defun ioccur-visible-buffer-p (buffer)
   "Can i see this buffer in this window."
-  (save-window-excursion
-    (let ((buf        (current-buffer))
-          (cur-w-conf (current-window-configuration)))
+  (let ((buf        (current-buffer))
+        (cur-w-conf (current-window-configuration)))
+    (save-window-excursion
       (pop-to-buffer buffer)
       (pop-to-buffer buf)
       ;; If BUFFER is NOT in same window than BUF
@@ -305,7 +307,7 @@ Move point to first occurence of `ioccur-search-pattern'."
          (pos  (string-to-number line)))
     (unless (or (string= line "")
                 (string= line "Ioccur"))
-      (pop-to-buffer ioccur-current-buffer)
+      (pop-to-buffer ioccur-current-buffer t)
       (ioccur-goto-line pos)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-search-pattern'.
@@ -596,7 +598,7 @@ for commands provided in the `ioccur-buffer'."
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (if (and (get-buffer ioccur-buffer)
            (not (ioccur-visible-buffer-p ioccur-buffer)))
-      (pop-to-buffer ioccur-buffer)
+      (pop-to-buffer ioccur-buffer t)
       (with-current-buffer ioccur-current-buffer
         (jit-lock-fontify-now))
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
@@ -605,7 +607,7 @@ for commands provided in the `ioccur-buffer'."
              str-no-prop)
         (set-text-properties 0 len nil init-str)
         (setq str-no-prop init-str)
-        (pop-to-buffer (get-buffer-create ioccur-buffer))
+        (pop-to-buffer (get-buffer-create ioccur-buffer) t)
         (ioccur-mode)
         (unwind-protect
              ;; Start incremental search.
