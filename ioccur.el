@@ -374,7 +374,8 @@ Move point to first occurence of `ioccur-search-pattern'."
   "Read each keyboard input and add it to `ioccur-search-pattern'."
   (let* ((prompt         (propertize ioccur-search-prompt
                                      'face 'minibuffer-prompt))
-         (inhibit-quit   (not (fboundp 'read-key)))
+         (inhibit-quit   (or (eq system-type 'windows-nt)
+                             (not (fboundp 'read-key))))
          (tmp-list       ())
          (it-prec        nil)
          (it-next        nil)
