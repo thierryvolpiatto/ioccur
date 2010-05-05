@@ -316,7 +316,7 @@ Move point to first occurence of `ioccur-search-pattern'."
 (defun ioccur-jump-without-quit ()
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
-  (ioccur-jump) (other-window 1))
+  (when (ioccur-jump) (other-window 1)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
