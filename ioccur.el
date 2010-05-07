@@ -224,7 +224,7 @@ Special commands:
 (defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
-  (let ((matched-lines (ioccur-find-readlines buffer regex)))
+  (let ((matched-lines (ioccur-find-readlines regex)))
     (when matched-lines
       (dolist (i matched-lines) ; Each element is of the form '(key value)
         (let* ((line           (second i))
@@ -580,11 +580,11 @@ for commands provided in the `ioccur-buffer'."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
+  (jit-lock-fontify-now)
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (if (and (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
       (pop-to-buffer ioccur-buffer t)
-      (with-current-buffer ioccur-current-buffer (jit-lock-fontify-now))
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
              (len      (length init-str))
              (curpos   (point))
