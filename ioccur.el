@@ -39,21 +39,21 @@
 
 (defvar ioccur-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q") 'ioccur-quit)
-    (define-key map (kbd "RET") 'ioccur-jump-and-quit)
-    (define-key map (kbd "<left>") 'ioccur-jump-and-quit)
-    (define-key map (kbd "<right>") 'ioccur-jump-without-quit)
-    (define-key map (kbd "C-z") 'ioccur-jump-without-quit)
+    (define-key map (kbd "q")        'ioccur-quit)
+    (define-key map (kbd "RET")      'ioccur-jump-and-quit)
+    (define-key map (kbd "<left>")   'ioccur-jump-and-quit)
+    (define-key map (kbd "<right>")  'ioccur-jump-without-quit)
+    (define-key map (kbd "C-z")      'ioccur-jump-without-quit)
     (define-key map (kbd "<C-down>") 'ioccur-scroll-down)
-    (define-key map (kbd "<C-up>") 'ioccur-scroll-up)
-    (define-key map (kbd "C-v") 'ioccur-scroll-other-window-up)
-    (define-key map (kbd "M-v") 'ioccur-scroll-other-window-down)
-    (define-key map (kbd "<down>") 'ioccur-next-line)
-    (define-key map (kbd "<up>") 'ioccur-precedent-line)
-    (define-key map (kbd "C-n") 'ioccur-next-line)
-    (define-key map (kbd "C-p") 'ioccur-precedent-line)
-    (define-key map (kbd "R") 'ioccur-restart)
-    (define-key map (kbd "C-|") 'ioccur-split-window)
+    (define-key map (kbd "<C-up>")   'ioccur-scroll-up)
+    (define-key map (kbd "C-v")      'ioccur-scroll-other-window-up)
+    (define-key map (kbd "M-v")      'ioccur-scroll-other-window-down)
+    (define-key map (kbd "<down>")   'ioccur-next-line)
+    (define-key map (kbd "<up>")     'ioccur-precedent-line)
+    (define-key map (kbd "C-n")      'ioccur-next-line)
+    (define-key map (kbd "C-p")      'ioccur-precedent-line)
+    (define-key map (kbd "R")        'ioccur-restart)
+    (define-key map (kbd "C-|")      'ioccur-split-window)
     map)
   "Keymap used for ioccur commands.")
 
@@ -78,8 +78,10 @@
   (if (window-system)
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
 C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
+
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
 C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
+
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
@@ -206,19 +208,18 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'buffer))
-  "Return an alist of all the (numline line)  matching REGEXP."
-  (let ((fn (case insert-fn
-              ('file 'insert-file-contents)
-              ('buffer 'insert-buffer-substring))))
-    (with-temp-buffer
-      (funcall fn bfile) ; call insert function
-      (goto-char (point-min))
-      (loop
-         with lines-list = (split-string (buffer-string) "\n")
-         for i in lines-list for count from 0 when (string-match regexp i)
-         collect (list count i) into lis
-         finally return lis))))
+(defsubst ioccur-find-readlines (regexp)
+  "Return an alist of all the (numline line) matching REGEXP."
+  (with-current-buffer ioccur-current-buffer
+    (goto-char (point-min))
+    (loop
+       while (not (eobp))
+       for count from 0
+       for line = (buffer-substring (point-at-bol) (point-at-eol))
+       when (string-match regexp line)
+       collect (list count line) into lis
+       do (forward-line 1)
+       finally return lis)))
 
 (defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
@@ -226,21 +227,17 @@ Special commands:
   (let ((matched-lines (ioccur-find-readlines buffer regex)))
     (when matched-lines
       (dolist (i matched-lines) ; Each element is of the form '(key value)
-        (let* ((ltp           (second i))
-               (replace-reg   (if (string-match "^\t" ltp)
+        (let* ((line           (second i))
+               (replace-reg   (if (string-match "^\t" line)
                                   "\\(^\t*\\)" "\\(^ *\\)"))
-               (new-ltp       (replace-regexp-in-string replace-reg "" ltp))
-               (line-to-print new-ltp))
+               (lineno        (int-to-string (1+ (first i))))
+               (ltp (replace-regexp-in-string replace-reg "" line))
+               (trunc-line    (if (> (length ltp) lline)
+                                  (substring ltp 0 lline) ltp)))
           (incf ioccur-count-occurences)
-          (insert (concat " " (propertize (int-to-string (+ (first i) 1))
-                                          'face 'ioccur-num-line-face
-                                          'help-echo line-to-print)
-                          ":"
-                          (if (> (length line-to-print) lline)
-                              (substring line-to-print 0 lline)
-                              line-to-print)
-                          "\n")))))))
-
+          (insert (concat " " (propertize lineno 'face 'ioccur-num-line-face
+                                          'help-echo ltp)
+                          ":" trunc-line "\n")))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
@@ -587,8 +584,7 @@ for commands provided in the `ioccur-buffer'."
   (if (and (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
       (pop-to-buffer ioccur-buffer t)
-      (with-current-buffer ioccur-current-buffer
-        (jit-lock-fontify-now))
+      (with-current-buffer ioccur-current-buffer (jit-lock-fontify-now))
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
              (len      (length init-str))
              (curpos   (point))
@@ -608,7 +604,7 @@ for commands provided in the `ioccur-buffer'."
             (kill-local-variable 'mode-line-format)
             (when (equal (buffer-substring (point-at-bol) (point-at-eol)) "")
               (setq ioccur-quit-flag t))
-            (cond (ioccur-quit-flag       ; C-g hit.
+            (cond (ioccur-quit-flag       ; C-g hit or empty `ioccur-buffer'.
                    (kill-buffer ioccur-buffer)
                    (switch-to-buffer ioccur-current-buffer)
                    (when ioccur-match-overlay
