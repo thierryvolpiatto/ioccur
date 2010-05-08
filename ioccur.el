@@ -428,8 +428,7 @@ Move point to first occurence of `ioccur-search-pattern'."
            (insert-initial-input ()
              (unless (string= initial-input "")
                (loop for char across initial-input
-                  do (push char tmp-list)))
-             (setq ioccur-search-pattern initial-input))
+                  do (push char tmp-list))))
            ;; Maybe start timer.
            ;;
            (start-timer ()
@@ -491,11 +490,16 @@ Move point to first occurence of `ioccur-search-pattern'."
                  (?\C-w                         ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
-                    (unless old-yank-point (setq old-yank-point (point)))
-                    (setq yank-point (point)) (forward-word 1)
+                    ;; Start to initial point if C-w have never been hit.
+                    (unless yank-point (setq yank-point old-yank-point))
+                    ;; After a search `ioccur-find-readlines' have put point
+                    ;; to point-max, so reset position.
+                    (when yank-point (goto-char yank-point))
+                    (forward-word 1)
                     (setq initial-input (buffer-substring-no-properties
                                          yank-point (point)))
-                  (insert-initial-input) t))
+                    (setq yank-point (point))   ; End of last forward-word
+                    (insert-initial-input) t))
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
