@@ -221,7 +221,7 @@ Special commands:
        do (forward-line 1)
        finally return (vconcat lis))))
 
-(defun* ioccur-print-buffer (regex &key (lline ioccur-length-line))
+(defsubst* ioccur-print-buffer (regex &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines regex)))
