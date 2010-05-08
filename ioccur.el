@@ -219,25 +219,27 @@ Special commands:
        when (string-match regexp line)
        collect (list count line) into lis
        do (forward-line 1)
-       finally return lis)))
+       finally return (vconcat lis))))
 
-(defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
+(defun* ioccur-print-buffer (regex &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines regex)))
     (when matched-lines
-      (dolist (i matched-lines) ; Each element is of the form '(key value)
-        (let* ((line           (second i))
-               (replace-reg   (if (string-match "^\t" line)
-                                  "\\(^\t*\\)" "\\(^ *\\)"))
-               (lineno        (int-to-string (1+ (first i))))
-               (ltp (replace-regexp-in-string replace-reg "" line))
-               (trunc-line    (if (> (length ltp) lline)
-                                  (substring ltp 0 lline) ltp)))
-          (incf ioccur-count-occurences)
-          (insert (concat " " (propertize lineno 'face 'ioccur-num-line-face
-                                          'help-echo ltp)
-                          ":" trunc-line "\n")))))))
+      (loop for i across matched-lines
+         for line        = (second i)
+         for bol-reg     = (if (string-match "^\t" line)
+                               "\\(^\t*\\)" "\\(^ *\\)")
+         for lineno      = (int-to-string (1+ (first i)))
+         for ltp         = (replace-regexp-in-string bol-reg "" line)
+         for trunc-line  = (if (> (length ltp) lline)
+                               (substring ltp 0 lline) ltp)
+         do
+           (progn
+             (incf ioccur-count-occurences)
+             (insert (concat " " (propertize lineno 'face 'ioccur-num-line-face
+                                             'help-echo ltp)
+                             ":" trunc-line "\n")))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
@@ -491,8 +493,9 @@ Move point to first occurence of `ioccur-search-pattern'."
                   (with-current-buffer ioccur-current-buffer
                     (unless old-yank-point (setq old-yank-point (point)))
                     (setq yank-point (point)) (forward-word 1)
-                    (setq initial-input (buffer-substring yank-point (point))))
-                  (insert-initial-input) t)
+                    (setq initial-input (buffer-substring-no-properties
+                                         yank-point (point)))
+                  (insert-initial-input) t))
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
@@ -517,7 +520,7 @@ Move point to first occurence of `ioccur-search-pattern'."
     (if (string= regexp "")
         (progn (erase-buffer) (insert (concat title "\n\n")))
         (erase-buffer)
-        (ioccur-print-buffer regexp buffer-name :lline ioccur-length-line)
+        (ioccur-print-buffer regexp :lline ioccur-length-line)
         (goto-char (point-min))
         (insert (concat title "\n\n"
                         (propertize (format "Found %s occurences of "
@@ -580,11 +583,15 @@ for commands provided in the `ioccur-buffer'."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
-  (jit-lock-fontify-now)
+  (message "Fontifying buffer...Please wait it could be long.")
+  (jit-lock-fontify-now) (message nil)
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (if (and (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
+      ;; An hidden `ioccur-buffer' exists jump to it.
       (pop-to-buffer ioccur-buffer t)
+      ;; `ioccur-buffer' doesn't exists or is not visible
+      ;; Start incremental search.
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
              (len      (length init-str))
              (curpos   (point))
