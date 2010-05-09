@@ -217,9 +217,9 @@ Special commands:
        for count from 0
        for line = (buffer-substring (point-at-bol) (point-at-eol))
        when (string-match regexp line)
-       collect (list count line) into lis
+       vconcat (list (list count line)) into vec
        do (forward-line 1)
-       finally return (vconcat lis))))
+       finally return vec)))
 
 (defsubst* ioccur-print-buffer (regex &key (lline ioccur-length-line))
   "Print matched lines in ioccur buffer."
