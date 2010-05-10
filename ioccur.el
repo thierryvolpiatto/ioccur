@@ -208,12 +208,17 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defsubst ioccur-find-readlines (regexp)
-  "Return an alist of all the (numline line) matching REGEXP."
+(defun ioccur-find-readlines (regexp)
+  "Return a vector of all \(numline line\) matching REGEXP."
   (with-current-buffer ioccur-current-buffer
     (goto-char (point-min))
     (loop
        while (not (eobp))
+       ;; We need to read also C-g from here
+       ;; Because when loop is started `ioccur-read-search-input'
+       ;; will read key only when loop is finished
+       ;; and we have no chance to exit loop.
+       when quit-flag return nil
        for count from 0
        for line = (buffer-substring (point-at-bol) (point-at-eol))
        when (string-match regexp line)
@@ -221,25 +226,31 @@ Special commands:
        do (forward-line 1)
        finally return vec)))
 
-(defsubst* ioccur-print-buffer (regex &key (lline ioccur-length-line))
+(defun ioccur-truncate-line (line)
+  "Remove indentation and truncate LINE to `ioccur-length-line'."
+  (let* ((bol-reg      (if (string-match "^\t" line)
+                           "\\(^\t*\\)" "\\(^ *\\)"))
+         (ltp         (replace-regexp-in-string bol-reg "" line)))
+    (if (> (length ltp) ioccur-length-line)
+        (substring ltp 0 ioccur-length-line) ltp)))
+
+(defun ioccur-print-buffer (regex)
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines regex)))
     (when matched-lines
       (loop for i across matched-lines
          for line        = (second i)
-         for bol-reg     = (if (string-match "^\t" line)
-                               "\\(^\t*\\)" "\\(^ *\\)")
          for lineno      = (int-to-string (1+ (first i)))
-         for ltp         = (replace-regexp-in-string bol-reg "" line)
-         for trunc-line  = (if (> (length ltp) lline)
-                               (substring ltp 0 lline) ltp)
+         for trunc-line  = (ioccur-truncate-line line)
          do
            (progn
              (incf ioccur-count-occurences)
-             (insert (concat " " (propertize lineno 'face 'ioccur-num-line-face
-                                             'help-echo ltp)
-                             ":" trunc-line "\n")))))))
+             (insert " "
+                     (propertize
+                      lineno 'face 'ioccur-num-line-face
+                      'help-echo line)
+                     ":" trunc-line "\n"))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
@@ -517,25 +528,23 @@ Move point to first occurence of `ioccur-search-pattern'."
                       nil))))
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
-
 (defun ioccur-update-buffer (regexp buffer-name)
   "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
         (progn (erase-buffer) (insert (concat title "\n\n")))
         (erase-buffer)
-        (ioccur-print-buffer regexp :lline ioccur-length-line)
+        (ioccur-print-buffer regexp)
         (goto-char (point-min))
-        (insert (concat title "\n\n"
-                        (propertize (format "Found %s occurences of "
-                                            ioccur-count-occurences)
-                                    'face 'underline)
-                        (propertize regexp 'face 'ioccur-regexp-face)
-                        (propertize
-                         (format " in %s" buffer-name)
-                         'face 'underline) "\n\n"))
+        (insert title "\n\n"
+                (propertize (format "Found %s occurences of "
+                                    ioccur-count-occurences)
+                            'face 'underline)
+                (propertize regexp 'face 'ioccur-regexp-face)
+                (propertize
+                 (format " in %s" buffer-name)
+                 'face 'underline) "\n\n")
         (ioccur-color-current-line))))
-
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
