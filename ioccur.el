@@ -211,20 +211,21 @@ Special commands:
 (defun ioccur-find-readlines (regexp)
   "Return a vector of all \(numline line\) matching REGEXP."
   (with-current-buffer ioccur-current-buffer
-    (goto-char (point-min))
-    (loop
-       while (not (eobp))
-       ;; We need to read also C-g from here
-       ;; Because when loop is started `ioccur-read-search-input'
-       ;; will read key only when loop is finished
-       ;; and we have no chance to exit loop.
-       when quit-flag return nil
-       for count from 0
-       for line = (buffer-substring (point-at-bol) (point-at-eol))
-       when (string-match regexp line)
-       vconcat (list (list count line)) into vec
-       do (forward-line 1)
-       finally return vec)))
+    (save-excursion
+      (goto-char (point-min))
+      (loop
+         while (not (eobp))
+         ;; We need to read also C-g from here
+         ;; Because when loop is started `ioccur-read-search-input'
+         ;; will read key only when loop is finished
+         ;; and we have no chance to exit loop.
+         when quit-flag return nil
+         for count from 0
+         for line = (buffer-substring (point-at-bol) (point-at-eol))
+         when (string-match regexp line)
+         vconcat (list (list count line)) into vec
+         do (forward-line 1)
+         finally return vec))))
 
 (defun ioccur-truncate-line (line)
   "Remove indentation and truncate LINE to `ioccur-length-line'."
