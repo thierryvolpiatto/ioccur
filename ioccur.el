@@ -529,7 +529,7 @@ Move point to first occurence of `ioccur-search-pattern'."
                       nil))))
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
-(defun ioccur-update-buffer (regexp buffer-name)
+(defun ioccur-print-buffer (regexp buffer-name)
   "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
@@ -553,7 +553,7 @@ Move point to first occurence of `ioccur-search-pattern'."
         (run-with-idle-timer
          ioccur-search-delay 'repeat
          #'(lambda ()
-             (ioccur-update-buffer
+             (ioccur-print-buffer
               ioccur-search-pattern
               ioccur-current-buffer)))))
 
