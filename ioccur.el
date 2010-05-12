@@ -235,7 +235,7 @@ Special commands:
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
 
-(defun ioccur-print-buffer (regex)
+(defun ioccur-print-results (regex)
   "Print matched lines in ioccur buffer."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines regex)))
@@ -535,7 +535,7 @@ Move point to first occurence of `ioccur-search-pattern'."
     (if (string= regexp "")
         (progn (erase-buffer) (insert (concat title "\n\n")))
         (erase-buffer)
-        (ioccur-print-buffer regexp)
+        (ioccur-print-results regexp)
         (goto-char (point-min))
         (insert title "\n\n"
                 (propertize (format "Found %s occurences of "
