@@ -8,7 +8,7 @@
 
 ;; X-URL: http://mercurial.intuxication.org/hg/ioccur
 
-;; This file is not part of GNU Emacs. 
+;; This file is not part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -26,12 +26,16 @@
 ;; Floor, Boston, MA 02110-1301, USA.
 
 ;;; Install:
-;;  -------
-
+;;
 ;; Add this file to your `load-path', BYTE-COMPILE it and
 ;; add (require 'ioccur) in your .emacs.
 ;; Start with M-x ioccur
 
+;;; Commentary:
+;;
+;; You may want to save `ioccur-history', you can do that if you
+;; use desktop, adding that to your .emacs:
+;; (add-to-list 'desktop-globals-to-save 'ioccur-history)
 
 ;;; Code:
 (require 'derived)
@@ -229,14 +233,14 @@ Special commands:
 
 (defun ioccur-truncate-line (line)
   "Remove indentation and truncate LINE to `ioccur-length-line'."
-  (let* ((bol-reg      (if (string-match "^\t" line)
+  (let* ((bol-reg (if (string-match "^\t" line)
                            "\\(^\t*\\)" "\\(^ *\\)"))
-         (ltp         (replace-regexp-in-string bol-reg "" line)))
+         (ltp     (replace-regexp-in-string bol-reg "" line)))
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
 
 (defun ioccur-print-results (regex)
-  "Print matched lines in ioccur buffer."
+  "Print lines matching REGEX in `ioccur-buffer'."
   (setq ioccur-count-occurences 0)
   (let ((matched-lines (ioccur-find-readlines regex)))
     (when matched-lines
@@ -274,11 +278,12 @@ Special commands:
   (delete-other-windows))
 
 (defun ioccur-goto-line (numline)
-  "Non--interactive version of `goto-line.'"
+  "Non--interactive version of `goto-line.'.
+Goto NUMLINE."
   (goto-char (point-min)) (forward-line (1- numline)))
 
 (defun ioccur-forward-line (n)
-  "Forward line only if it is not an empty line."
+  "Forward N lines but empty one's."
   (let (pos)
     (save-excursion
       (forward-line n) (forward-line 0)
@@ -342,7 +347,7 @@ Move point to first occurence of `ioccur-search-pattern'."
   (scroll-other-window -1))
 
 (defun ioccur-scroll (n)
-  "Scroll other buffer and move overlay accordingly."
+  "Scroll other buffer N lines and move overlay accordingly."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
   (when (ioccur-jump)
@@ -374,7 +379,7 @@ Move point to first occurence of `ioccur-search-pattern'."
        (get-buffer ioccur-buffer)))))
 
 (defun ioccur-read-char-or-event (prompt)
-  "Replace `read-key' when  not available."
+  "Replace `read-key' when not available using PROMPT."
   (if (fboundp 'read-key)
       (read-key prompt)
       (let* ((chr (condition-case nil (read-char prompt) (error nil)))
@@ -382,7 +387,9 @@ Move point to first occurence of `ioccur-search-pattern'."
         (or chr evt))))
 
 (defun ioccur-read-search-input (initial-input start-point)
-  "Read each keyboard input and add it to `ioccur-search-pattern'."
+  "Read each keyboard input and add it to `ioccur-search-pattern'.
+INITIAL-INPUT is a string given as default input, generally thing at point.
+START-POINT is the point where we start searching in buffer."
   (let* ((prompt         (propertize ioccur-search-prompt
                                      'face 'minibuffer-prompt))
          (inhibit-quit   (or (eq system-type 'windows-nt)
@@ -665,7 +672,7 @@ for commands provided in the `ioccur-buffer'."
     (setq ioccur-search-timer nil)))
 
 (defun ioccur-color-current-line ()
-  "Highlight and underline current line in ioccur buffer."
+  "Highlight and underline current line in `ioccur-buffer'."
   (if ioccur-occur-overlay
       (move-overlay ioccur-occur-overlay
                     (point-at-bol) (1+ (point-at-eol)) ioccur-buffer)
@@ -674,7 +681,8 @@ for commands provided in the `ioccur-buffer'."
   (overlay-put ioccur-occur-overlay 'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
-  "Highlight and underline current position on matched line in current-buffer."
+  "Highlight and underline current position \
+of matched line in `ioccur-current-buffer'."
   (if ioccur-match-overlay
       (move-overlay ioccur-match-overlay
                     (point-at-bol) (1+ (point-at-eol)))
@@ -682,7 +690,7 @@ for commands provided in the `ioccur-buffer'."
             (make-overlay (point-at-bol) (1+ (point-at-eol)))))
   (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
-;;; Provide
+
 (provide 'ioccur)
 
-;;; ioccur.el ends here.
+;;; ioccur.el ends here
