@@ -212,8 +212,9 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defun ioccur-find-readlines (regexp)
-  "Return a vector of all \(numline line\) matching REGEXP."
+(defun ioccur-print-results (regexp)
+  "Print al lines matching REGEXP in `ioccur-buffer'."
+  (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
     (save-excursion
       (goto-char (point-min))
@@ -227,9 +228,19 @@ Special commands:
          for count from 0
          for line = (buffer-substring (point-at-bol) (point-at-eol))
          when (string-match regexp line)
-         vconcat (list (list count line)) into vec
-         do (forward-line 1)
-         finally return vec))))
+         do (ioccur-print-line line count)
+         do (forward-line 1)))))
+
+(defun ioccur-print-line (line nline)
+  "Prepare and insert a matched line in `ioccur-buffer'."
+  (with-current-buffer ioccur-buffer
+    (let ((lineno     (int-to-string (1+ nline)))
+          (trunc-line (ioccur-truncate-line line)))
+      (incf ioccur-count-occurences)
+      (insert " " (propertize
+                   lineno 'face 'ioccur-num-line-face
+                   'help-echo line)
+              ":" trunc-line "\n"))))
 
 (defun ioccur-truncate-line (line)
   "Remove indentation and truncate LINE to `ioccur-length-line'."
@@ -238,24 +249,6 @@ Special commands:
          (ltp     (replace-regexp-in-string bol-reg "" line)))
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
-
-(defun ioccur-print-results (regex)
-  "Print lines matching REGEX in `ioccur-buffer'."
-  (setq ioccur-count-occurences 0)
-  (let ((matched-lines (ioccur-find-readlines regex)))
-    (when matched-lines
-      (loop for i across matched-lines
-         for line        = (second i)
-         for lineno      = (int-to-string (1+ (first i)))
-         for trunc-line  = (ioccur-truncate-line line)
-         do
-           (progn
-             (incf ioccur-count-occurences)
-             (insert " "
-                     (propertize
-                      lineno 'face 'ioccur-num-line-face
-                      'help-echo line)
-                     ":" trunc-line "\n"))))))
 
 ;;;###autoload
 (defun ioccur-restart ()
