@@ -8,7 +8,7 @@
 
 ;; X-URL: http://mercurial.intuxication.org/hg/ioccur
 
-;; This file is not part of GNU Emacs. 
+;; This file is not part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -26,12 +26,16 @@
 ;; Floor, Boston, MA 02110-1301, USA.
 
 ;;; Install:
-;;  -------
-
+;;
 ;; Add this file to your `load-path', BYTE-COMPILE it and
 ;; add (require 'ioccur) in your .emacs.
 ;; Start with M-x ioccur
 
+;;; Commentary:
+;;
+;; You may want to save `ioccur-history', you can do that if you
+;; use desktop, adding that to your .emacs:
+;; (add-to-list 'desktop-globals-to-save 'ioccur-history)
 
 ;;; Code:
 (require 'derived)
@@ -39,21 +43,21 @@
 
 (defvar ioccur-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "q") 'ioccur-quit)
-    (define-key map (kbd "RET") 'ioccur-jump-and-quit)
-    (define-key map (kbd "<left>") 'ioccur-jump-and-quit)
-    (define-key map (kbd "<right>") 'ioccur-jump-without-quit)
-    (define-key map (kbd "C-z") 'ioccur-jump-without-quit)
+    (define-key map (kbd "q")        'ioccur-quit)
+    (define-key map (kbd "RET")      'ioccur-jump-and-quit)
+    (define-key map (kbd "<left>")   'ioccur-jump-and-quit)
+    (define-key map (kbd "<right>")  'ioccur-jump-without-quit)
+    (define-key map (kbd "C-z")      'ioccur-jump-without-quit)
     (define-key map (kbd "<C-down>") 'ioccur-scroll-down)
-    (define-key map (kbd "<C-up>") 'ioccur-scroll-up)
-    (define-key map (kbd "C-v") 'ioccur-scroll-other-window-up)
-    (define-key map (kbd "M-v") 'ioccur-scroll-other-window-down)
-    (define-key map (kbd "<down>") 'ioccur-next-line)
-    (define-key map (kbd "<up>") 'ioccur-precedent-line)
-    (define-key map (kbd "C-n") 'ioccur-next-line)
-    (define-key map (kbd "C-p") 'ioccur-precedent-line)
-    (define-key map (kbd "R") 'ioccur-restart)
-    (define-key map (kbd "C-|") 'ioccur-split-window)
+    (define-key map (kbd "<C-up>")   'ioccur-scroll-up)
+    (define-key map (kbd "C-v")      'ioccur-scroll-other-window-up)
+    (define-key map (kbd "M-v")      'ioccur-scroll-other-window-down)
+    (define-key map (kbd "<down>")   'ioccur-next-line)
+    (define-key map (kbd "<up>")     'ioccur-precedent-line)
+    (define-key map (kbd "C-n")      'ioccur-next-line)
+    (define-key map (kbd "C-p")      'ioccur-precedent-line)
+    (define-key map (kbd "R")        'ioccur-restart)
+    (define-key map (kbd "C-|")      'ioccur-split-window)
     map)
   "Keymap used for ioccur commands.")
 
@@ -78,8 +82,10 @@
   (if (window-system)
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
 C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
+
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
 C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
+
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
@@ -206,51 +212,51 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defsubst* ioccur-find-readlines (bfile regexp &key (insert-fn 'buffer))
-  "Return an alist of all the (numline line)  matching REGEXP."
-  (let ((fn (case insert-fn
-              ('file 'insert-file-contents)
-              ('buffer 'insert-buffer-substring))))
-    (with-temp-buffer
-      (funcall fn bfile) ; call insert function
+(defun ioccur-print-results (regexp)
+  "Print all lines matching REGEXP in `ioccur-buffer'."
+  (setq ioccur-count-occurences 0)
+  (with-current-buffer ioccur-current-buffer
+    (save-excursion
       (goto-char (point-min))
       (loop
-         with lines-list = (split-string (buffer-string) "\n")
-         for i in lines-list for count from 0 when (string-match regexp i)
-         collect (list count i) into lis
-         finally return lis))))
+         while (not (eobp))
+         ;; We need to read also C-g from here
+         ;; Because when loop is started `ioccur-read-search-input'
+         ;; will read key only when loop is finished
+         ;; and we have no chance to exit loop.
+         when quit-flag do (setq ioccur-quit-flag t) and return nil
+         for count from 0
+         for line = (buffer-substring (point-at-bol) (point-at-eol))
+         when (string-match regexp line)
+         do (ioccur-print-line line count)
+         do (forward-line 1)))))
 
-(defun* ioccur-print-buffer (regex buffer &key (lline ioccur-length-line))
-  "Print matched lines in ioccur buffer."
-  (setq ioccur-count-occurences 0)
-  (let ((matched-lines (ioccur-find-readlines buffer regex)))
-    (when matched-lines
-      (dolist (i matched-lines) ; Each element is of the form '(key value)
-        (let* ((ltp           (second i))
-               (replace-reg   (if (string-match "^\t" ltp)
-                                  "\\(^\t*\\)" "\\(^ *\\)"))
-               (new-ltp       (replace-regexp-in-string replace-reg "" ltp))
-               (line-to-print new-ltp))
-          (incf ioccur-count-occurences)
-          (insert (concat " " (propertize (int-to-string (+ (first i) 1))
-                                          'face 'ioccur-num-line-face
-                                          'help-echo line-to-print)
-                          ":"
-                          (if (> (length line-to-print) lline)
-                              (substring line-to-print 0 lline)
-                              line-to-print)
-                          "\n")))))))
+(defun ioccur-print-line (line nline)
+  "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
+  (with-current-buffer ioccur-buffer
+    (let ((lineno     (int-to-string (1+ nline)))
+          (trunc-line (ioccur-truncate-line line)))
+      (incf ioccur-count-occurences)
+      (insert " " (propertize
+                   lineno 'face 'ioccur-num-line-face
+                   'help-echo line)
+              ":" trunc-line "\n"))))
 
+(defun ioccur-truncate-line (line)
+  "Remove indentation and truncate LINE to `ioccur-length-line'."
+  (let* ((bol-reg (if (string-match "^\t" line)
+                      "\\(^\t*\\)" "\\(^ *\\)"))
+         (ltp     (replace-regexp-in-string bol-reg "" line)))
+    (if (> (length ltp) ioccur-length-line)
+        (substring ltp 0 ioccur-length-line) ltp)))
 
 ;;;###autoload
 (defun ioccur-restart ()
   "Restart `ioccur' from `ioccur-buffer'.
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
-  (when (and (eq major-mode 'ioccur-mode)
-             (eq (count-windows) 2))
-    (other-window 1)
-    (ioccur)))
+  (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
+    (other-window 1) (ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
@@ -263,11 +269,12 @@ Special commands:
   (delete-other-windows))
 
 (defun ioccur-goto-line (numline)
-  "Non--interactive version of `goto-line.'"
+  "Non--interactive version of `goto-line.'.
+Goto NUMLINE."
   (goto-char (point-min)) (forward-line (1- numline)))
 
 (defun ioccur-forward-line (n)
-  "Forward line only if it is not an empty line."
+  "Forward N lines but empty one's."
   (let (pos)
     (save-excursion
       (forward-line n) (forward-line 0)
@@ -331,7 +338,7 @@ Move point to first occurence of `ioccur-search-pattern'."
   (scroll-other-window -1))
 
 (defun ioccur-scroll (n)
-  "Scroll other buffer and move overlay accordingly."
+  "Scroll other buffer N lines and move overlay accordingly."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
   (when (ioccur-jump)
@@ -363,7 +370,7 @@ Move point to first occurence of `ioccur-search-pattern'."
        (get-buffer ioccur-buffer)))))
 
 (defun ioccur-read-char-or-event (prompt)
-  "Replace `read-key' when  not available."
+  "Replace `read-key' when not available using PROMPT."
   (if (fboundp 'read-key)
       (read-key prompt)
       (let* ((chr (condition-case nil (read-char prompt) (error nil)))
@@ -371,7 +378,9 @@ Move point to first occurence of `ioccur-search-pattern'."
         (or chr evt))))
 
 (defun ioccur-read-search-input (initial-input start-point)
-  "Read each keyboard input and add it to `ioccur-search-pattern'."
+  "Read each keyboard input and add it to `ioccur-search-pattern'.
+INITIAL-INPUT is a string given as default input, generally thing at point.
+START-POINT is the point where we start searching in buffer."
   (let* ((prompt         (propertize ioccur-search-prompt
                                      'face 'minibuffer-prompt))
          (inhibit-quit   (or (eq system-type 'windows-nt)
@@ -429,8 +438,7 @@ Move point to first occurence of `ioccur-search-pattern'."
            (insert-initial-input ()
              (unless (string= initial-input "")
                (loop for char across initial-input
-                  do (push char tmp-list)))
-             (setq ioccur-search-pattern initial-input))
+                  do (push char tmp-list))))
            ;; Maybe start timer.
            ;;
            (start-timer ()
@@ -456,8 +464,7 @@ Move point to first occurence of `ioccur-search-pattern'."
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
                  ((?\C-d C-down)                ; Scroll both windows down.
-                  (stop-timer)
-                  (ioccur-scroll-down) t)
+                  (stop-timer) (ioccur-scroll-down) t)
                  ((?\C-u C-up)                  ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
                  (?\r                           ; RET break and exit code.
@@ -492,10 +499,16 @@ Move point to first occurence of `ioccur-search-pattern'."
                  (?\C-w                         ; Yank stuff at point.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
-                    (unless old-yank-point (setq old-yank-point (point)))
-                    (setq yank-point (point)) (forward-word 1)
-                    (setq initial-input (buffer-substring yank-point (point))))
-                  (insert-initial-input) t)
+                    ;; Start to initial point if C-w have never been hit.
+                    (unless yank-point (setq yank-point old-yank-point))
+                    ;; After a search `ioccur-find-readlines' have put point
+                    ;; to point-max, so reset position.
+                    (when yank-point (goto-char yank-point))
+                    (forward-word 1)
+                    (setq initial-input (buffer-substring-no-properties
+                                         yank-point (point)))
+                    (setq yank-point (point))   ; End of last forward-word
+                    (insert-initial-input) t))
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
                   (cycle-hist -1))
@@ -513,25 +526,23 @@ Move point to first occurence of `ioccur-search-pattern'."
                       nil))))
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
-
-(defun ioccur-update-buffer (regexp buffer-name)
+(defun ioccur-print-buffer (regexp buffer-name)
   "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
         (progn (erase-buffer) (insert (concat title "\n\n")))
         (erase-buffer)
-        (ioccur-print-buffer regexp buffer-name :lline ioccur-length-line)
+        (ioccur-print-results regexp)
         (goto-char (point-min))
-        (insert (concat title "\n\n"
-                        (propertize (format "Found %s occurences of "
-                                            ioccur-count-occurences)
-                                    'face 'underline)
-                        (propertize regexp 'face 'ioccur-regexp-face)
-                        (propertize
-                         (format " in %s" buffer-name)
-                         'face 'underline) "\n\n"))
+        (insert title "\n\n"
+                (propertize (format "Found %s occurences of "
+                                    ioccur-count-occurences)
+                            'face 'underline)
+                (propertize regexp 'face 'ioccur-regexp-face)
+                (propertize
+                 (format " in %s" buffer-name)
+                 'face 'underline) "\n\n")
         (ioccur-color-current-line))))
-
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
@@ -539,7 +550,7 @@ Move point to first occurence of `ioccur-search-pattern'."
         (run-with-idle-timer
          ioccur-search-delay 'repeat
          #'(lambda ()
-             (ioccur-update-buffer
+             (ioccur-print-buffer
               ioccur-search-pattern
               ioccur-current-buffer)))))
 
@@ -583,12 +594,15 @@ for commands provided in the `ioccur-buffer'."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
+  (message "Fontifying buffer...Please wait it could be long.")
+  (jit-lock-fontify-now) (message nil)
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (if (and (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
+      ;; An hidden `ioccur-buffer' exists jump to it.
       (pop-to-buffer ioccur-buffer t)
-      (with-current-buffer ioccur-current-buffer
-        (jit-lock-fontify-now))
+      ;; `ioccur-buffer' doesn't exists or is not visible
+      ;; Start incremental search.
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
              (len      (length init-str))
              (curpos   (point))
@@ -608,7 +622,7 @@ for commands provided in the `ioccur-buffer'."
             (kill-local-variable 'mode-line-format)
             (when (equal (buffer-substring (point-at-bol) (point-at-eol)) "")
               (setq ioccur-quit-flag t))
-            (cond (ioccur-quit-flag       ; C-g hit.
+            (cond (ioccur-quit-flag       ; C-g hit or empty `ioccur-buffer'.
                    (kill-buffer ioccur-buffer)
                    (switch-to-buffer ioccur-current-buffer)
                    (when ioccur-match-overlay
@@ -648,7 +662,7 @@ for commands provided in the `ioccur-buffer'."
     (setq ioccur-search-timer nil)))
 
 (defun ioccur-color-current-line ()
-  "Highlight and underline current line in ioccur buffer."
+  "Highlight and underline current line in `ioccur-buffer'."
   (if ioccur-occur-overlay
       (move-overlay ioccur-occur-overlay
                     (point-at-bol) (1+ (point-at-eol)) ioccur-buffer)
@@ -657,7 +671,8 @@ for commands provided in the `ioccur-buffer'."
   (overlay-put ioccur-occur-overlay 'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
-  "Highlight and underline current position on matched line in current-buffer."
+  "Highlight and underline current position \
+of matched line in `ioccur-current-buffer'."
   (if ioccur-match-overlay
       (move-overlay ioccur-match-overlay
                     (point-at-bol) (1+ (point-at-eol)))
@@ -665,7 +680,7 @@ for commands provided in the `ioccur-buffer'."
             (make-overlay (point-at-bol) (1+ (point-at-eol)))))
   (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
-;;; Provide
+
 (provide 'ioccur)
 
-;;; ioccur.el ends here.
+;;; ioccur.el ends here
