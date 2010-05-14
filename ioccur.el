@@ -213,7 +213,7 @@ Special commands:
                    (ioccur-iter-next iterator)))))))
 
 (defun ioccur-print-results (regexp)
-  "Print al lines matching REGEXP in `ioccur-buffer'."
+  "Print all lines matching REGEXP in `ioccur-buffer'."
   (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
     (save-excursion
@@ -224,7 +224,7 @@ Special commands:
          ;; Because when loop is started `ioccur-read-search-input'
          ;; will read key only when loop is finished
          ;; and we have no chance to exit loop.
-         when quit-flag return nil
+         when quit-flag do (setq ioccur-quit-flag t) and return nil
          for count from 0
          for line = (buffer-substring (point-at-bol) (point-at-eol))
          when (string-match regexp line)
@@ -232,7 +232,7 @@ Special commands:
          do (forward-line 1)))))
 
 (defun ioccur-print-line (line nline)
-  "Prepare and insert a matched line in `ioccur-buffer'."
+  "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let ((lineno     (int-to-string (1+ nline)))
           (trunc-line (ioccur-truncate-line line)))
