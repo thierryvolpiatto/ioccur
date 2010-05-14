@@ -245,7 +245,7 @@ Special commands:
 (defun ioccur-truncate-line (line)
   "Remove indentation and truncate LINE to `ioccur-length-line'."
   (let* ((bol-reg (if (string-match "^\t" line)
-                           "\\(^\t*\\)" "\\(^ *\\)"))
+                      "\\(^\t*\\)" "\\(^ *\\)"))
          (ltp     (replace-regexp-in-string bol-reg "" line)))
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
@@ -255,10 +255,8 @@ Special commands:
   "Restart `ioccur' from `ioccur-buffer'.
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
-  (when (and (eq major-mode 'ioccur-mode)
-             (eq (count-windows) 2))
-    (other-window 1)
-    (ioccur)))
+  (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
+    (other-window 1) (ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
@@ -466,8 +464,7 @@ START-POINT is the point where we start searching in buffer."
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
                  ((?\C-d C-down)                ; Scroll both windows down.
-                  (stop-timer)
-                  (ioccur-scroll-down) t)
+                  (stop-timer) (ioccur-scroll-down) t)
                  ((?\C-u C-up)                  ; Scroll both windows up.
                   (stop-timer) (ioccur-scroll-up) t)
                  (?\r                           ; RET break and exit code.
