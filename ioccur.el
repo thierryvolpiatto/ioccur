@@ -226,9 +226,9 @@ Special commands:
          ;; and we have no chance to exit loop.
          when quit-flag do (setq ioccur-quit-flag t) and return nil
          for count from 0
-         for line = (buffer-substring (point-at-bol) (point-at-eol))
-         when (string-match regexp line)
-         do (ioccur-print-line line count)
+         when (re-search-forward regexp (point-at-eol) t)
+         do (ioccur-print-line
+             (buffer-substring (point-at-bol) (point-at-eol)) count)
          do (forward-line 1)))))
 
 (defun ioccur-print-line (line nline)
