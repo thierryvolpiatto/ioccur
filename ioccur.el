@@ -213,7 +213,8 @@ Special commands:
                    (ioccur-iter-next iterator)))))))
 
 (defun ioccur-print-results (regexp)
-  "Print all lines matching REGEXP in `ioccur-buffer'."
+  "Print in `ioccur-buffer' all lines matching REGEXP \
+found in `ioccur-current-buffer'."
   (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
     (save-excursion
@@ -530,7 +531,7 @@ START-POINT is the point where we start searching in buffer."
   "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
-        (progn (erase-buffer) (insert (concat title "\n\n")))
+        (progn (erase-buffer) (insert title "\n\n"))
         (erase-buffer)
         (ioccur-print-results regexp)
         (goto-char (point-min))
