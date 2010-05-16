@@ -527,8 +527,8 @@ START-POINT is the point where we start searching in buffer."
                       nil))))
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
-(defun ioccur-print-buffer (regexp buffer-name)
-  "Print all lines matching REGEXP in current buffer to buffer BUFFER-NAME."
+(defun ioccur-print-buffer (regexp)
+  "Prepare and print results in `ioccur-buffer'."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
@@ -541,7 +541,7 @@ START-POINT is the point where we start searching in buffer."
                             'face 'underline)
                 (propertize regexp 'face 'ioccur-regexp-face)
                 (propertize
-                 (format " in %s" buffer-name)
+                 (format " in %s" ioccur-current-buffer)
                  'face 'underline) "\n\n")
         (ioccur-color-current-line))))
 
@@ -552,9 +552,8 @@ START-POINT is the point where we start searching in buffer."
          ioccur-search-delay 'repeat
          #'(lambda ()
              (ioccur-print-buffer
-              ioccur-search-pattern
-              ioccur-current-buffer)))))
-
+              ioccur-search-pattern)))))
+              
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
