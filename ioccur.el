@@ -399,6 +399,7 @@ START-POINT is the point where we start searching in buffer."
     ;; Cycle history function.
     ;;
     (flet ((cycle-hist (arg)
+             ;; ARG can be positive or negative depending we call M-p or M-n.
              (if ioccur-history
                  (progn
                    ;; Cycle history will start at second call,
@@ -406,7 +407,7 @@ START-POINT is the point where we start searching in buffer."
                    ;; We build a new iterator based on a sublist
                    ;; starting at the current element of history.
                    ;; This is a circular iterator. (no end)
-                   (if start-hist ; At first call start-hist is nil.
+                   (if start-hist ; At first call, start-hist is nil.
                        (progn
                          (if (< arg 0)
                              ;; M-p (move from left to right in hist ring).
