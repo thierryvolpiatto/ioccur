@@ -503,7 +503,7 @@ START-POINT is the point where we start searching in buffer."
                   (with-current-buffer ioccur-current-buffer
                     ;; Start to initial point if C-w have never been hit.
                     (unless yank-point (setq yank-point old-yank-point))
-                    ;; After a search `ioccur-find-readlines' have put point
+                    ;; After a search `ioccur-print-results' have put point
                     ;; to point-max, so reset position.
                     (when yank-point (goto-char yank-point))
                     (forward-word 1)
@@ -602,8 +602,7 @@ for commands provided in the `ioccur-buffer'."
            (not (get-buffer-window ioccur-buffer)))
       ;; An hidden `ioccur-buffer' exists jump to it.
       (pop-to-buffer ioccur-buffer t)
-      ;; `ioccur-buffer' doesn't exists or is not visible
-      ;; Start incremental search.
+      ;; `ioccur-buffer' doesn't exists or is not visible, start searching.
       (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
              (len      (length init-str))
              (curpos   (point))
