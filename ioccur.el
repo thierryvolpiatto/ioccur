@@ -212,11 +212,11 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defun ioccur-print-results (regexp)
-  "Print in `ioccur-buffer' all lines matching REGEXP \
-found in `ioccur-current-buffer'."
+(defun* ioccur-print-results (regexp &optional (buffer ioccur-current-buffer))
+  "Print in `ioccur-buffer' all lines matching REGEXP found in BUFFER.
+BUFFER default value is `ioccur-current-buffer'."
   (setq ioccur-count-occurences 0)
-  (with-current-buffer ioccur-current-buffer
+  (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
       (loop
@@ -232,8 +232,9 @@ found in `ioccur-current-buffer'."
              (buffer-substring (point-at-bol) (point-at-eol)) count)
          do (forward-line 1)))))
 
-(defun ioccur-print-line (line nline)
-  "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
+(defun* ioccur-print-line (line nline &optional (buffer ioccur-buffer))
+  "Prepare and insert a matched LINE at line number NLINE in BUFFER.
+BUFFER default value is `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let ((lineno     (int-to-string (1+ nline)))
           (trunc-line (ioccur-truncate-line line)))
@@ -243,8 +244,9 @@ found in `ioccur-current-buffer'."
                    'help-echo line)
               ":" trunc-line "\n"))))
 
-(defun ioccur-truncate-line (line)
-  "Remove indentation and truncate LINE to `ioccur-length-line'."
+(defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
+  "Remove indentation and truncate LINE to COLUMNS.
+COLUMNS default value is `ioccur-length-line'."
   (let* ((bol-reg (if (string-match "^\t" line)
                       "\\(^\t*\\)" "\\(^ *\\)"))
          (ltp     (replace-regexp-in-string bol-reg "" line)))
@@ -529,7 +531,7 @@ START-POINT is the point where we start searching in buffer."
         (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
 
 (defun ioccur-print-buffer (regexp)
-  "Prepare and print results in `ioccur-buffer'."
+  "Pretty Print results matching REGEXP in `ioccur-buffer'."
   (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
