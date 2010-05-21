@@ -212,11 +212,11 @@ Special commands:
                    (setq iterator (ioccur-iter-list sub))
                    (ioccur-iter-next iterator)))))))
 
-(defun* ioccur-print-results (regexp &optional (buffer ioccur-current-buffer))
+(defun ioccur-print-results (regexp)
   "Print in `ioccur-buffer' all lines matching REGEXP found in BUFFER.
 BUFFER default value is `ioccur-current-buffer'."
   (setq ioccur-count-occurences 0)
-  (with-current-buffer buffer
+  (with-current-buffer ioccur-current-buffer
     (save-excursion
       (goto-char (point-min))
       (loop
@@ -232,7 +232,7 @@ BUFFER default value is `ioccur-current-buffer'."
              (buffer-substring (point-at-bol) (point-at-eol)) count)
          do (forward-line 1)))))
 
-(defun* ioccur-print-line (line nline &optional (buffer ioccur-buffer))
+(defun ioccur-print-line (line nline)
   "Prepare and insert a matched LINE at line number NLINE in BUFFER.
 BUFFER default value is `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
