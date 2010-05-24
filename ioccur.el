@@ -253,28 +253,27 @@ COLUMNS default value is `ioccur-length-line'."
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
 
-(defun* ioccur-buffer-contain (regexp buffer)
+(defun ioccur-buffer-contain (regexp buffer)
   "Return BUFFER if BUFFER contain an occurence of REGEXP."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
-      (when (re-search-forward regexp nil t)
-        (return-from ioccur-buffer-contain buffer)))))
+      (when (re-search-forward regexp nil t) buffer))))
 
 (defun ioccur-buffers-matching (regexp)
   "Returns a list of all existing buffers matching REGEXP."
-  (loop with buf-list = (loop
-                           for i in (buffer-list)
-                           when (buffer-file-name
-                                 (get-buffer i)) collect i)
+  (loop with buf-list = (loop for i in (buffer-list)
+                           when (buffer-file-name (get-buffer i))
+                           collect i)
      for buf in buf-list
      when (ioccur-buffer-contain regexp buf)
      collect (buffer-name buf)))
 
 ;;;###autoload
 (defun ioccur-find-buffer-matching (regexp)
-  "Find an existing buffer matching REGEXP and connect `ioccur' to it."
-  (interactive "sRegexp: ")
+  "Find an existing buffer containing an expression matching REGEXP\
+and connect `ioccur' to it."
+  (interactive "sPattern: ")
   (let* ((prompt   (format "Search Buffer matching %s: " regexp))
          (buf-list (ioccur-buffers-matching regexp))
          (buf      (if (fboundp 'anything-comp-read)
