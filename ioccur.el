@@ -253,6 +253,36 @@ COLUMNS default value is `ioccur-length-line'."
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
 
+(defun* ioccur-buffer-contain (regexp buffer)
+  "Return BUFFER if BUFFER contain an occurence of REGEXP."
+  (with-current-buffer buffer
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward regexp nil t)
+        (return-from ioccur-buffer-contain buffer)))))
+
+(defun ioccur-buffers-matching (regexp)
+  "Returns a list of all existing buffers matching REGEXP."
+  (loop with buf-list = (loop
+                           for i in (buffer-list)
+                           when (buffer-file-name
+                                 (get-buffer i)) collect i)
+     for buf in buf-list
+     when (ioccur-buffer-contain regexp buf)
+     collect (buffer-name buf)))
+
+;;;###autoload
+(defun ioccur-find-buffer-matching (regexp)
+  "Find an existing buffer matching REGEXP and connect `ioccur' to it."
+  (interactive "sRegexp: ")
+  (let* ((prompt   (format "Search Buffer matching %s: " regexp))
+         (buf-list (ioccur-buffers-matching regexp))
+         (buf      (if (fboundp 'anything-comp-read)
+                       (anything-comp-read prompt buf-list :must-match t)
+                       (completing-read prompt buf-list nil t))))
+    (switch-to-buffer buf)
+    (ioccur regexp)))
+
 ;;;###autoload
 (defun ioccur-restart ()
   "Restart `ioccur' from `ioccur-buffer'.
@@ -605,7 +635,11 @@ for commands provided in the `ioccur-buffer'."
       ;; An hidden `ioccur-buffer' exists jump to it.
       (pop-to-buffer ioccur-buffer t)
       ;; `ioccur-buffer' doesn't exists or is not visible, start searching.
-      (let* ((init-str (if initial-input (thing-at-point 'symbol) ""))
+      (let* ((init-str (if initial-input
+                           (if (stringp initial-input)
+                               initial-input
+                               (thing-at-point 'symbol))
+                           ""))
              (len      (length init-str))
              (curpos   (point))
              str-no-prop)
