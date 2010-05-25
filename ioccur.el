@@ -281,8 +281,8 @@ and connect `ioccur' to it."
                        (completing-read prompt buf-list nil t))))
     (switch-to-buffer buf)
     (ioccur regexp)
-    (while (and (not (string= (car ioccur-history) regexp))
-                (string= regexp ioccur-search-pattern))
+    (when (and (not (string= (car ioccur-history) regexp))
+               (string= regexp ioccur-search-pattern))
       (ioccur-find-buffer-matching regexp buf-list))))
 
 ;;;###autoload
