@@ -140,7 +140,7 @@ Set it to nil to remove doc in mode-line."
 (defvar ioccur-count-occurences 0)
 (defvar ioccur-buffer nil)
 (make-variable-buffer-local 'ioccur-buffer)
-  
+(defvar ioccur-success nil)  
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -284,8 +284,7 @@ and connect `ioccur' to it."
                        (completing-read prompt buf-list nil t))))
     (switch-to-buffer buf)
     (ioccur regexp)
-    (when (and (not (string= (car ioccur-history) regexp))
-               (string= regexp ioccur-search-pattern))
+    (unless ioccur-success
       (ioccur-find-buffer-matching regexp buf-list))))
 
 ;;;###autoload
@@ -631,11 +630,13 @@ When you quit incremental search with RET, see `ioccur-mode'
 for commands provided in the `ioccur-buffer'."
   (interactive "P")
   (setq ioccur-exit-and-quit-p nil)
+  (setq ioccur-success nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
   (message "Fontifying buffer...Please wait it could be long.")
   (jit-lock-fontify-now) (message nil)
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
-  (if (and (get-buffer ioccur-buffer)
+  (if (and (not initial-input)
+           (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
       ;; An hidden `ioccur-buffer' exists jump to it.
       (pop-to-buffer ioccur-buffer t)
@@ -668,7 +669,8 @@ for commands provided in the `ioccur-buffer'."
                    (switch-to-buffer ioccur-current-buffer)
                    (when ioccur-match-overlay
                      (delete-overlay ioccur-match-overlay))
-                   (delete-other-windows) (goto-char curpos) (message nil))
+                   (delete-other-windows) (goto-char curpos)
+                   (message nil))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
                    (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
                    (message nil) (ioccur-save-history))
@@ -694,7 +696,8 @@ for commands provided in the `ioccur-buffer'."
             ioccur-history)))
   (when (> (length ioccur-history) ioccur-max-length-history)
     (setq ioccur-history (delete (car (last ioccur-history))
-                                 ioccur-history))))
+                                 ioccur-history)))
+  (setq ioccur-success t))
 
 (defun ioccur-cancel-search ()
   "Cancel timer used for ioccur searching."
