@@ -270,7 +270,7 @@ COLUMNS default value is `ioccur-length-line'."
      collect (buffer-name buf)))
 
 ;;;###autoload
-(defun ioccur-find-buffer-matching (regexp &optional buffer-list)
+(defun ioccur-find-buffer-matching (regexp &optional buffers)
   "Find an existing buffer containing an expression matching REGEXP\
 and connect `ioccur' to it."
   (interactive (list (let ((savehist-save-minibuffer-history nil))
@@ -278,7 +278,7 @@ and connect `ioccur' to it."
                                     (car ioccur-history)
                                     '(ioccur-history . 1)))))
   (let* ((prompt   (format "Search Buffer matching %s: " regexp))
-         (buf-list (or buffer-list (ioccur-buffers-matching regexp)))
+         (buf-list (or buffers (ioccur-buffers-matching regexp)))
          (buf      (if (fboundp 'anything-comp-read)
                        (anything-comp-read prompt buf-list :must-match t)
                        (completing-read prompt buf-list nil t))))
