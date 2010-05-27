@@ -260,8 +260,21 @@ COLUMNS default value is `ioccur-length-line'."
       (goto-char (point-min))
       (when (re-search-forward regexp nil t) buffer))))
 
-(defun ioccur-buffers-matching (regexp)
-  "Return a list of all existing buffers containing REGEXP."
+(defun ioccur-list-buffers-matching (buffer-match regexp)
+  "Return a list of all buffer with name matching BUFFER-NAME and\
+containing lines matching REGEXP."
+  (loop
+     with ini-buf-list = (loop for buf in (buffer-list)
+                            unless (rassq buf dired-buffers)
+                            collect buf)
+     for buf in ini-buf-list
+     for bname = (buffer-name buf)
+     when (and (string-match buffer-match bname)
+               (ioccur-buffer-contain regexp buf))
+     collect bname))
+
+(defun ioccur-list-buffers-containing (regexp)
+  "Return a list of all existing buffers containing lines matching REGEXP."
   (loop with buf-list = (loop for i in (buffer-list)
                            when (buffer-file-name (get-buffer i))
                            collect i)
@@ -273,15 +286,19 @@ COLUMNS default value is `ioccur-length-line'."
 (defun* ioccur-find-buffer-matching (regexp)
   "Find an existing buffer containing an expression matching REGEXP\
 and connect `ioccur' to it.
-Hitting C-g in a `ioccur' search will return to buffer completion list.
+With a prefix arg search in buffer matching specified expression.
+Hitting C-g in a `ioccur' session will return to buffer completion list.
 Hitting C-g in the buffer completion list will jump back to initial buffer."
   (interactive (list (let ((savehist-save-minibuffer-history nil))
-                       (read-string "Pattern: "
+                       (read-string "Search for Pattern: "
                                     (car ioccur-history)
                                     '(ioccur-history . 1)))))
 
-  (let ((prompt   (format "Search Buffer matching %s: " regexp))
-        (buf-list (ioccur-buffers-matching regexp))
+  (let ((prompt   (format "Search in Buffer(%s): " regexp))
+        (buf-list (if current-prefix-arg
+                      (ioccur-list-buffers-matching
+                       (read-string "In Buffer matching: ") regexp)
+                      (ioccur-list-buffers-containing regexp)))
         (win-conf (current-window-configuration)))
 
     (labels
