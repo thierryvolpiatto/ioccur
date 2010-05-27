@@ -286,9 +286,11 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
 
     (labels
         ((find-buffer ()
-           (let ((buf (if (fboundp 'anything-comp-read)
-                          (anything-comp-read prompt buf-list :must-match t)
-                          (completing-read prompt buf-list nil t))))
+           (let ((buf (cond ((fboundp 'anything-comp-read)
+                             (anything-comp-read prompt buf-list :must-match t))
+                            (ido-mode
+                             (ido-completing-read prompt buf-list nil t))
+                            (t (completing-read prompt buf-list nil t)))))
              (unwind-protect
                   (progn
                     (switch-to-buffer buf)
