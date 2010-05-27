@@ -294,7 +294,7 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
                                     (car ioccur-history)
                                     '(ioccur-history . 1)))))
 
-  (let ((prompt   (format "Search in Buffer(%s): " regexp))
+  (let ((prompt   (format "Search (%s) in Buffer: " regexp))
         (buf-list (if current-prefix-arg
                       (ioccur-list-buffers-matching
                        (read-string "In Buffer matching: ") regexp)
