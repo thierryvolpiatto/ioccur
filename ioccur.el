@@ -140,7 +140,7 @@ Set it to nil to remove doc in mode-line."
 (defvar ioccur-count-occurences 0)
 (defvar ioccur-buffer nil)
 (make-variable-buffer-local 'ioccur-buffer)
-(defvar ioccur-success nil)  
+(defvar ioccur-success nil)
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -254,14 +254,14 @@ COLUMNS default value is `ioccur-length-line'."
         (substring ltp 0 ioccur-length-line) ltp)))
 
 (defun ioccur-buffer-contain (regexp buffer)
-  "Return BUFFER if BUFFER contain an occurence of REGEXP."
+  "Return BUFFER if it contain an occurence of REGEXP."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
       (when (re-search-forward regexp nil t) buffer))))
 
 (defun ioccur-buffers-matching (regexp)
-  "Returns a list of all existing buffers matching REGEXP."
+  "Return a list of all existing buffers containing REGEXP."
   (loop with buf-list = (loop for i in (buffer-list)
                            when (buffer-file-name (get-buffer i))
                            collect i)
@@ -270,22 +270,36 @@ COLUMNS default value is `ioccur-length-line'."
      collect (buffer-name buf)))
 
 ;;;###autoload
-(defun ioccur-find-buffer-matching (regexp &optional buffers)
+(defun* ioccur-find-buffer-matching (regexp)
   "Find an existing buffer containing an expression matching REGEXP\
-and connect `ioccur' to it."
+and connect `ioccur' to it.
+Hitting C-g in a `ioccur' search will return to buffer completion list.
+Hitting C-g in the buffer completion list will jump back to initial buffer."
   (interactive (list (let ((savehist-save-minibuffer-history nil))
                        (read-string "Pattern: "
                                     (car ioccur-history)
                                     '(ioccur-history . 1)))))
-  (let* ((prompt   (format "Search Buffer matching %s: " regexp))
-         (buf-list (or buffers (ioccur-buffers-matching regexp)))
-         (buf      (if (fboundp 'anything-comp-read)
-                       (anything-comp-read prompt buf-list :must-match t)
-                       (completing-read prompt buf-list nil t))))
-    (switch-to-buffer buf)
-    (ioccur regexp)
-    (unless ioccur-success
-      (ioccur-find-buffer-matching regexp buf-list))))
+
+  (let ((prompt   (format "Search Buffer matching %s: " regexp))
+        (buf-list (ioccur-buffers-matching regexp))
+        (win-conf (current-window-configuration)))
+
+    (labels
+        ((find-buffer ()
+           (let ((buf (if (fboundp 'anything-comp-read)
+                          (anything-comp-read prompt buf-list :must-match t)
+                          (completing-read prompt buf-list nil t))))
+             (unwind-protect
+                  (progn
+                    (switch-to-buffer buf)
+                    (ioccur regexp)
+                    (unless ioccur-success
+                      (find-buffer)))
+               (unless ioccur-success
+                 (set-window-configuration win-conf)
+                 (return-from ioccur-find-buffer-matching))))))
+
+      (find-buffer))))
 
 ;;;###autoload
 (defun ioccur-restart ()
