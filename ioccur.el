@@ -29,13 +29,20 @@
 ;;
 ;; Add this file to your `load-path', BYTE-COMPILE it and
 ;; add (require 'ioccur) in your .emacs.
-;; Start with M-x ioccur
+;;
+;; Start with (C-u) M-x ioccur
+;;            or
+;;            (C-u) M-x ioccur-find-buffer-matching
+;;
+;; Do C-h f ioccur or ioccur-find-buffer-matching for more info.
 
 ;;; Commentary:
 ;;
-;; You may want to save `ioccur-history', you can do that if you
-;; use desktop, adding that to your .emacs:
+;; To save `ioccur-history', use desktop, adding that to your .emacs:
 ;; (add-to-list 'desktop-globals-to-save 'ioccur-history)
+;;
+;; For more info See:
+;; [EVAL] (info "(emacs) saving emacs sessions")
 
 ;;; Code:
 (require 'derived)
