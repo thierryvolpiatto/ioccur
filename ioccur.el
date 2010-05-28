@@ -318,7 +318,7 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
   (let ((prompt   (format "Search (%s) in Buffer: " regexp))
         (buf-list (if current-prefix-arg
                       (ioccur-list-buffers-matching
-                       (read-string "In Buffer matching: ") regexp)
+                       (read-string "In Buffer names matching: ") regexp)
                       (ioccur-list-buffers-containing regexp)))
         (win-conf (current-window-configuration)))
 
