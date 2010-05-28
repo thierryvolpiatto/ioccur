@@ -108,6 +108,19 @@ Set it to nil to remove doc in mode-line."
   :group 'ioccur
   :type 'integer)
 
+(defcustom ioccur-buffer-completion-style 'anything
+  "*Type of completing read style you prefer to choose buffers \
+in `ioccur-find-buffer-matching'.
+It can be one of 'anything or 'ido.
+When nil or if anything is not found or `ido-mode' is off,
+fallback to classic `completing-read'.
+NOTE:
+To have anything completion you need a recent version of
+`anything-config.el'.
+To have ido completion, you have to enable `ido-mode'."
+  :group 'ioccur
+  :type 'symbol)
+
 ;;; Faces.
 (defface ioccur-overlay-face
     '((t (:background "Green4" :underline t)))
@@ -311,9 +324,11 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
 
     (labels
         ((find-buffer ()
-           (let ((buf (cond ((fboundp 'anything-comp-read)
+           (let ((buf (cond ((and (fboundp 'anything-comp-read)
+                                  (eq ioccur-buffer-completion-style 'anything))
                              (anything-comp-read prompt buf-list :must-match t))
-                            (ido-mode
+                            ((and ido-mode
+                                  (eq ioccur-buffer-completion-style 'ido))
                              (ido-completing-read prompt buf-list nil t))
                             (t (completing-read prompt buf-list nil t)))))
              (unwind-protect
