@@ -260,7 +260,7 @@ COLUMNS default value is `ioccur-length-line'."
     (if (> (length ltp) ioccur-length-line)
         (substring ltp 0 ioccur-length-line) ltp)))
 
-(defun ioccur-buffer-contain (regexp buffer)
+(defun ioccur-buffer-contain (buffer regexp)
   "Return BUFFER if it contain an occurence of REGEXP."
   (with-current-buffer buffer
     (save-excursion
@@ -268,7 +268,7 @@ COLUMNS default value is `ioccur-length-line'."
       (when (re-search-forward regexp nil t) buffer))))
 
 (defun ioccur-list-buffers-matching (buffer-match regexp)
-  "Return a list of all buffer with name matching BUFFER-NAME and\
+  "Return a list of all buffer with name matching BUFFER-MATCH and \
 containing lines matching REGEXP."
   (loop
      with ini-buf-list = (loop for buf in (buffer-list)
@@ -277,21 +277,22 @@ containing lines matching REGEXP."
      for buf in ini-buf-list
      for bname = (buffer-name buf)
      when (and (string-match buffer-match bname)
-               (ioccur-buffer-contain regexp buf))
+               (ioccur-buffer-contain buf regexp))
      collect bname))
 
 (defun ioccur-list-buffers-containing (regexp)
-  "Return a list of all existing buffers containing lines matching REGEXP."
+  "Return a list of all existing buffers filename containing \
+lines matching REGEXP."
   (loop with buf-list = (loop for i in (buffer-list)
                            when (buffer-file-name (get-buffer i))
                            collect i)
      for buf in buf-list
-     when (ioccur-buffer-contain regexp buf)
+     when (ioccur-buffer-contain buf regexp)
      collect (buffer-name buf)))
 
 ;;;###autoload
-(defun* ioccur-find-buffer-matching (regexp)
-  "Find an existing buffer containing an expression matching REGEXP\
+(defun ioccur-find-buffer-matching (regexp)
+  "Find an existing buffer containing an expression matching REGEXP \
 and connect `ioccur' to it.
 With a prefix arg search in buffer matching specified expression.
 Hitting C-g in a `ioccur' session will return to buffer completion list.
@@ -319,11 +320,14 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
                   (progn
                     (switch-to-buffer buf)
                     (ioccur regexp)
+                    ;; Exit if we jump to this `ioccur-current-buffer',
+                    ;; otherwise, if C-g is hitten,
+                    ;; go back to buffer completion list.
                     (unless ioccur-success
                       (find-buffer)))
+               ;; C-g hit in buffer completion restore window config.
                (unless ioccur-success
-                 (set-window-configuration win-conf)
-                 (return-from ioccur-find-buffer-matching))))))
+                 (set-window-configuration win-conf))))))
 
       (find-buffer))))
 
