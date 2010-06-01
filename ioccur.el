@@ -312,8 +312,8 @@ Hitting C-g in a `ioccur' session will return to buffer completion list.
 Hitting C-g in the buffer completion list will jump back to initial buffer."
   (interactive (list (let ((savehist-save-minibuffer-history nil))
                        (read-from-minibuffer "Search for Pattern: "
-                                    nil nil nil '(ioccur-history . 0)
-                                    (thing-at-point 'symbol)))))
+                                             nil nil nil '(ioccur-history . 0)
+                                             (thing-at-point 'symbol)))))
 
   (let ((prompt   (format "Search (%s) in Buffer: " regexp))
         (buf-list (if current-prefix-arg
