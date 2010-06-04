@@ -403,6 +403,7 @@ Move point to first occurence of `ioccur-search-pattern'."
     (unless (or (string= line "")
                 (string= line "Ioccur"))
       (pop-to-buffer ioccur-current-buffer t)
+      (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-search-pattern'.
