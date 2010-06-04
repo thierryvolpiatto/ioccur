@@ -314,6 +314,11 @@ Hitting C-g in the buffer completion list will jump back to initial buffer."
                        (read-from-minibuffer "Search for Pattern: "
                                              nil nil nil '(ioccur-history . 0)
                                              (thing-at-point 'symbol)))))
+  ;; Remove doublons maybe added by minibuffer in `ioccur-history'.
+  (setq ioccur-history
+        (loop with hist for i in ioccur-history
+           when (not (member i hist)) collect i into hist
+           finally return hist))
 
   (let ((prompt   (format "Search (%s) in Buffer: " regexp))
         (buf-list (if current-prefix-arg
