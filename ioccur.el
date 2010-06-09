@@ -305,11 +305,18 @@ lines matching REGEXP."
 
 ;;;###autoload
 (defun ioccur-find-buffer-matching (regexp)
-  "Find an existing buffer containing an expression matching REGEXP \
-and connect `ioccur' to it.
-With a prefix arg search in buffer matching specified expression.
-Hitting C-g in a `ioccur' session will return to buffer completion list.
-Hitting C-g in the buffer completion list will jump back to initial buffer."
+  "Find all buffers containing a text matching REGEXP \
+and connect `ioccur' to the selected one.
+
+With a prefix arg search is performed only in buffers
+with name matching specified expression (prompt).
+
+Hitting C-g in a `ioccur' session will return to completion list.
+Hitting C-g in the completion list will jump back to initial buffer.
+
+The buffer completion list is provided by one of:
+`anything-comp-read', `ido-completing-read', `completing-read'
+depending on which `ioccur-buffer-completion-style' you have choosen."
   (interactive (list (let ((savehist-save-minibuffer-history nil))
                        (read-from-minibuffer "Search for Pattern: "
                                              nil nil nil '(ioccur-history . 0)
