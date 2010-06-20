@@ -325,12 +325,12 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
            finally return hist))
 
   (let ((prompt   (format "Search (%s) in Buffer: " regexp))
+        (win-conf (current-window-configuration))
         (buf-list (if match-buf-name
                       (ioccur-list-buffers-matching
                        (read-string "In Buffer names matching: ")
                        regexp buffer-list)
-                      (ioccur-list-buffers-containing regexp buffer-list)))
-        (win-conf (current-window-configuration)))
+                      (ioccur-list-buffers-containing regexp buffer-list))))
 
     (labels
         ((find-buffer ()
@@ -365,6 +365,18 @@ See `ioccur-find-buffer-matching1'."
                                              nil nil nil '(ioccur-history . 0)
                                              (thing-at-point 'symbol)))))
   (ioccur-find-buffer-matching1 regexp current-prefix-arg))
+
+;;; Ioccur dired
+;;;###autoload
+(defun ioccur-dired (regexp)
+  (interactive (list (let ((savehist-save-minibuffer-history nil))
+                       (read-from-minibuffer "Search for Pattern: "
+                                             nil nil nil '(ioccur-history . 0)
+                                             (thing-at-point 'symbol)))))
+  (let ((buf-list (loop for f in (dired-get-marked-files)
+                     do (find-file-noselect f)
+                     collect (get-buffer (file-name-nondirectory f)))))
+    (ioccur-find-buffer-matching1 regexp nil buf-list)))
 
 ;;;###autoload
 (defun ioccur-restart ()
