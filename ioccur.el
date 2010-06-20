@@ -375,6 +375,7 @@ See `ioccur-find-buffer-matching1'."
                                              (thing-at-point 'symbol)))))
   (let ((buf-list (loop for f in (dired-get-marked-files)
                      do (find-file-noselect f)
+                     unless (file-directory-p f)
                      collect (get-buffer (file-name-nondirectory f)))))
     (ioccur-find-buffer-matching1 regexp nil buf-list)))
 
