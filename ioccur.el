@@ -280,11 +280,11 @@ COLUMNS default value is `ioccur-length-line'."
       (goto-char (point-min))
       (when (re-search-forward regexp nil t) buffer))))
 
-(defun ioccur-list-buffers-matching (buffer-match regexp)
-  "Return a list of all buffer with name matching BUFFER-MATCH and \
-containing lines matching REGEXP."
+(defun ioccur-list-buffers-matching (buffer-match regexp buffer-list)
+  "Collect all buffers in BUFFER-LIST whose names match BUFFER-MATCH and \
+contain lines matching REGEXP."
   (loop
-     with ini-buf-list = (loop for buf in (buffer-list)
+     with ini-buf-list = (loop for buf in buffer-list
                             unless (rassq buf dired-buffers)
                             collect buf)
      for buf in ini-buf-list
@@ -293,22 +293,23 @@ containing lines matching REGEXP."
                (ioccur-buffer-contain buf regexp))
      collect bname))
 
-(defun ioccur-list-buffers-containing (regexp)
-  "Return a list of all existing buffers filename containing \
-lines matching REGEXP."
-  (loop with buf-list = (loop for i in (buffer-list)
+(defun ioccur-list-buffers-containing (regexp buffer-list)
+  "Collect all buffers in BUFFER-LIST containing lines matching REGEXP."
+  (loop with buf-list = (loop for i in buffer-list
                            when (buffer-file-name (get-buffer i))
                            collect i)
      for buf in buf-list
      when (ioccur-buffer-contain buf regexp)
      collect (buffer-name buf)))
 
-;;;###autoload
-(defun ioccur-find-buffer-matching (regexp)
+(defun* ioccur-find-buffer-matching1 (regexp
+                                      &optional
+                                      match-buf-name
+                                      (buffer-list (buffer-list)))
   "Find all buffers containing a text matching REGEXP \
 and connect `ioccur' to the selected one.
 
-With a prefix arg search is performed only in buffers
+If MATCH-BUF-NAME is non--nil search is performed only in buffers
 with name matching specified expression (prompt).
 
 Hitting C-g in a `ioccur' session will return to completion list.
@@ -317,10 +318,6 @@ Hitting C-g in the completion list will jump back to initial buffer.
 The buffer completion list is provided by one of:
 `anything-comp-read', `ido-completing-read', `completing-read'
 depending on which `ioccur-buffer-completion-style' you have choosen."
-  (interactive (list (let ((savehist-save-minibuffer-history nil))
-                       (read-from-minibuffer "Search for Pattern: "
-                                             nil nil nil '(ioccur-history . 0)
-                                             (thing-at-point 'symbol)))))
   ;; Remove doublons maybe added by minibuffer in `ioccur-history'.
   (setq ioccur-history
         (loop with hist for i in ioccur-history
@@ -328,10 +325,11 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
            finally return hist))
 
   (let ((prompt   (format "Search (%s) in Buffer: " regexp))
-        (buf-list (if current-prefix-arg
+        (buf-list (if match-buf-name
                       (ioccur-list-buffers-matching
-                       (read-string "In Buffer names matching: ") regexp)
-                      (ioccur-list-buffers-containing regexp)))
+                       (read-string "In Buffer names matching: ")
+                       regexp buffer-list)
+                      (ioccur-list-buffers-containing regexp buffer-list)))
         (win-conf (current-window-configuration)))
 
     (labels
@@ -357,6 +355,16 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
                  (set-window-configuration win-conf))))))
 
       (find-buffer))))
+
+;;;###autoload
+(defun ioccur-find-buffer-matching (regexp)
+  "Find all buffers containing a text matching REGEXP.
+See `ioccur-find-buffer-matching1'."
+  (interactive (list (let ((savehist-save-minibuffer-history nil))
+                       (read-from-minibuffer "Search for Pattern: "
+                                             nil nil nil '(ioccur-history . 0)
+                                             (thing-at-point 'symbol)))))
+  (ioccur-find-buffer-matching1 regexp current-prefix-arg))
 
 ;;;###autoload
 (defun ioccur-restart ()
