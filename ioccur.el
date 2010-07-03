@@ -47,6 +47,7 @@
 ;;; Code:
 (require 'derived)
 (eval-when-compile (require 'cl))
+(require 'outline)
 
 (defvar ioccur-mode-map
   (let ((map (make-sparse-keymap)))
