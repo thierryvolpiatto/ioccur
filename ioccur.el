@@ -664,7 +664,9 @@ START-POINT is the point where we start searching in buffer."
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
         (erase-buffer)
-        (ioccur-print-results regexp)
+        (condition-case nil
+            (ioccur-print-results regexp)
+          (error nil))
         (goto-char (point-min))
         (insert title "\n\n"
                 (propertize (format "Found %s occurences of "
