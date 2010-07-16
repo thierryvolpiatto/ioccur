@@ -676,7 +676,7 @@ START-POINT is the point where we start searching in buffer."
                          'face '((:foreground "red")))
              regexp)
             (insert title "\n\n"
-                    (propertize (format "Found %s occurences of "
+                    (propertize (format "Found %s occurences matching "
                                         ioccur-count-occurences)
                                 'face 'underline)
                     (propertize regexp 'face 'ioccur-regexp-face)
