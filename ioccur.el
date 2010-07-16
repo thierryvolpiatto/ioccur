@@ -660,23 +660,29 @@ START-POINT is the point where we start searching in buffer."
 
 (defun ioccur-print-buffer (regexp)
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
-  (let ((title (propertize "Ioccur" 'face 'ioccur-title-face)))
+  (let ((title (propertize "Ioccur" 'face 'ioccur-title-face))
+        wrong-regexp)
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
         (erase-buffer)
-        (condition-case nil
+        (condition-case err
             (ioccur-print-results regexp)
-          (error nil))
+          (error (setq wrong-regexp t)))
         (goto-char (point-min))
-        (insert title "\n\n"
-                (propertize (format "Found %s occurences of "
-                                    ioccur-count-occurences)
-                            'face 'underline)
-                (propertize regexp 'face 'ioccur-regexp-face)
-                (propertize
-                 (format " in %s" ioccur-current-buffer)
-                 'face 'underline) "\n\n")
-        (ioccur-color-current-line))))
+        (if wrong-regexp
+            (insert
+             title "\n\n>> "
+             (propertize "Incomplete Expression"
+                         'face '((:foreground "red"))))
+            (insert title "\n\n"
+                    (propertize (format "Found %s occurences of "
+                                        ioccur-count-occurences)
+                                'face 'underline)
+                    (propertize regexp 'face 'ioccur-regexp-face)
+                    (propertize
+                     (format " in %s" ioccur-current-buffer)
+                     'face 'underline) "\n\n")
+            (ioccur-color-current-line)))))
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
