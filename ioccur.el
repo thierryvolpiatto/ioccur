@@ -148,6 +148,12 @@ To have ido completion, you have to enable `ido-mode'."
   "Face for highlight number line in ioccur buffer."
   :group 'ioccur-faces)
 
+(defface ioccur-invalid-regexp
+    '((t (:foreground "Goldenrod")))
+  "Face for highlight wrong regexp message in ioccur buffer."
+  :group 'ioccur-faces)
+
+
 ;;; Internal variables.
 (defvar ioccur-search-pattern "")
 (defvar ioccur-search-timer nil)
@@ -671,10 +677,10 @@ START-POINT is the point where we start searching in buffer."
         (goto-char (point-min))
         (if wrong-regexp
             (insert
-             title "\n\n>> "
+             title "\n\n"
              (propertize "Invalid Expression: "
-                         'face '((:foreground "red")))
-             regexp)
+                         'face 'ioccur-invalid-regexp)
+             (format "`%s'" regexp) "\n\n")
             (insert title "\n\n"
                     (propertize (format "Found %s occurences matching "
                                         ioccur-count-occurences)
