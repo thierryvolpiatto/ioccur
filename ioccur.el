@@ -678,9 +678,9 @@ START-POINT is the point where we start searching in buffer."
         (if wrong-regexp
             (insert
              title "\n\n"
-             (propertize "Invalid Expression: "
+             (propertize "Invalid Regexp: "
                          'face 'ioccur-invalid-regexp)
-             (format "`%s'" regexp) "\n\n")
+             (format "No match for `%s'" regexp) "\n\n")
             (insert title "\n\n"
                     (propertize (format "Found %s occurences matching "
                                         ioccur-count-occurences)
