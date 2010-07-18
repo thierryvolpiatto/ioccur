@@ -441,7 +441,9 @@ Goto NUMLINE."
   "Jump to line in other buffer and put an overlay on it.
 Move point to first occurence of `ioccur-search-pattern'."
   (let* ((line (buffer-substring (point-at-bol) (point-at-eol)))
-         (pos  (string-to-number line)))
+         (pos  (string-to-number line))
+         (back-search-fn (if (eq ioccur-search-function 're-search-forward)
+                             're-search-backward 'search-backward)))
     (unless (or (string= line "")
                 (string= line "Ioccur"))
       (pop-to-buffer ioccur-current-buffer t)
@@ -449,8 +451,9 @@ Move point to first occurence of `ioccur-search-pattern'."
       (ioccur-goto-line pos)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-search-pattern'.
-      (when (re-search-forward ioccur-search-pattern (point-at-eol) t)
-        (re-search-backward ioccur-search-pattern (point-at-bol) t))
+      (when (funcall ioccur-search-function
+                     ioccur-search-pattern (point-at-eol) t)
+        (funcall back-search-fn ioccur-search-pattern (point-at-bol) t))
       (ioccur-color-matched-line))))
 
 ;;;###autoload
@@ -678,7 +681,7 @@ START-POINT is the point where we start searching in buffer."
 (defun ioccur-print-buffer (regexp)
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
   (let* ((cur-method (if (eq ioccur-search-function 're-search-forward)
-                        "Regexp" "Literal"))
+                         "Regexp" "Literal"))
          (title (propertize
                  (format "Ioccur %s searching (`C-:' to Toggle Method)"
                          cur-method)
