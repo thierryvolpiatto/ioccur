@@ -161,19 +161,31 @@ Use here one of `re-search-forward' or `search-forward'."
 
 
 ;;; Internal variables.
+;; String entered in prompt.
 (defvar ioccur-search-pattern "")
+;; The ioccur timer.
 (defvar ioccur-search-timer nil)
+;; Signal C-g hit.
 (defvar ioccur-quit-flag nil)
+;; The buffer we search in.
 (defvar ioccur-current-buffer nil)
+;; The overlay in `ioccur-buffer'.
 (defvar ioccur-occur-overlay nil)
 (make-variable-buffer-local 'ioccur-occur-overlay)
+;; Signal we quit and kill `ioccur-buffer'.
 (defvar ioccur-exit-and-quit-p nil)
+;; A list to store history.
 (defvar ioccur-history nil)
+;; The overlay in `ioccur-current-buffer'.
 (defvar ioccur-match-overlay nil)
+;; Number of occurences found.
 (defvar ioccur-count-occurences 0)
+;;The buffer where we send results.
 (defvar ioccur-buffer nil)
 (make-variable-buffer-local 'ioccur-buffer)
+;; True when jumping to a founded occurence.
 (defvar ioccur-success nil)
+;; Search function actually in use.
 (defvar ioccur-search-function ioccur-default-search-function)
 
 (define-derived-mode ioccur-mode
@@ -247,8 +259,7 @@ Special commands:
                    (ioccur-iter-next iterator)))))))
 
 (defun ioccur-print-results (regexp)
-  "Print in `ioccur-buffer' all lines matching REGEXP found in BUFFER.
-BUFFER default value is `ioccur-current-buffer'."
+  "Print in `ioccur-buffer' lines matching REGEXP in `ioccur-current-buffer'."
   (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
     (save-excursion
@@ -267,8 +278,7 @@ BUFFER default value is `ioccur-current-buffer'."
          do (forward-line 1)))))
 
 (defun ioccur-print-line (line nline)
-  "Prepare and insert a matched LINE at line number NLINE in BUFFER.
-BUFFER default value is `ioccur-buffer'."
+  "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let ((lineno     (int-to-string (1+ nline)))
           (trunc-line (ioccur-truncate-line line)))
@@ -279,7 +289,7 @@ BUFFER default value is `ioccur-buffer'."
               ":" trunc-line "\n"))))
 
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
-  "Remove indentation and truncate LINE to COLUMNS.
+  "Remove indentation and truncate LINE of num COLUMNS.
 COLUMNS default value is `ioccur-length-line'."
   (let* ((bol-reg (if (string-match "^\t" line)
                       "\\(^\t*\\)" "\\(^ *\\)"))
@@ -412,7 +422,7 @@ See `ioccur-find-buffer-matching1'."
   (delete-other-windows))
 
 (defun ioccur-goto-line (numline)
-  "Non--interactive version of `goto-line.'.
+  "Non--interactive version of `goto-line'.
 Goto NUMLINE."
   (goto-char (point-min)) (forward-line (1- numline)))
 
