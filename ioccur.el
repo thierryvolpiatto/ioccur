@@ -89,10 +89,10 @@
 (defcustom ioccur-mode-line-string
   (if (window-system)
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
-C-n/p:Next/Prec-line, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
+C-n/p:Next/Prec, M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
 
       " RET:Exit, C-g:Quit, C-k:Kill, C-z:Jump, C-j:Jump&quit, \
-C-n/p:Next/Prec-line, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
+C-n/p:Next/Prec, Tab/S-tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
 
   "*Documentation of `ioccur' prompt displayed in mode-line.
 Set it to nil to remove doc in mode-line."
