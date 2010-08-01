@@ -693,9 +693,25 @@ START-POINT is the point where we start searching in buffer."
   (let* ((cur-method (if (eq ioccur-search-function 're-search-forward)
                          "Regexp" "Literal"))
          (title (propertize
-                 (format "Ioccur %s searching (`C-:' to Toggle Method)"
+                 (format "* Ioccur %s searching * (`C-:' to Toggle Method, Mouse over for help.)"
                          cur-method)
-                 'face 'ioccur-title-face))
+                 'face 'ioccur-title-face
+                 'help-echo
+"C-n or <down>  next line.\n
+C-p or <up>    precedent line.\n
+C-v and M-v    scroll up and down.\n
+C-z or <right> jump without quitting loop.\n
+C-j or <left>  jump and kill `ioccur-buffer'.\n
+RET            exit keeping `ioccur-buffer'.\n
+DEL            remove last character entered.\n
+C-k            Kill current input.\n
+C-w            Yank stuff at point.\n
+C-g            quit and restore buffer.\n
+C-|            Toggle split window.\n
+C-:            Toggle regexp/litteral search.\n
+C-down         Follow in other buffer.\n
+C-up           Follow in other buffer.\n
+M-p/n          Precedent and next `ioccur-history' element."))
            wrong-regexp)
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
