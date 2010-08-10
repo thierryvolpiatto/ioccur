@@ -48,6 +48,7 @@
 (require 'derived)
 (eval-when-compile (require 'cl))
 (require 'outline)
+(eval-when-compile (require 'wdired))
 
 (defvar ioccur-mode-map
   (let ((map (make-sparse-keymap)))
@@ -745,8 +746,7 @@ M-p/n           Precedent and next `ioccur-history' element."))
              (ioccur-print-buffer
               ioccur-search-pattern)))))
 
-(declare-function 'wdired-change-to-wdired-mode "wdired.el")
-(declare-function 'wdired-change-to-dired-mode "wdired.el")
+
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
