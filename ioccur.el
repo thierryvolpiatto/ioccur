@@ -450,8 +450,8 @@ Goto NUMLINE."
 (defun ioccur-jump ()
   "Jump to line in other buffer and put an overlay on it.
 Move point to first occurence of `ioccur-search-pattern'."
-  (let* ((line (buffer-substring (point-at-bol) (point-at-eol)))
-         (pos  (string-to-number line))
+  (let* ((line           (buffer-substring (point-at-bol) (point-at-eol)))
+         (pos            (string-to-number line))
          (back-search-fn (if (eq ioccur-search-function 're-search-forward)
                              're-search-backward 'search-backward)))
     (unless (or (string= line "")
@@ -698,20 +698,20 @@ START-POINT is the point where we start searching in buffer."
                  'face 'ioccur-title-face
                  'help-echo
 "C-n or <down>  next line.\n
-C-p or <up>    precedent line.\n
-C-v and M-v    scroll up and down.\n
-C-z or <right> jump without quitting loop.\n
-C-j or <left>  jump and kill `ioccur-buffer'.\n
-RET            exit keeping `ioccur-buffer'.\n
-DEL            remove last character entered.\n
-C-k            Kill current input.\n
-C-w            Yank stuff at point.\n
-C-g            quit and restore buffer.\n
-C-|            Toggle split window.\n
-C-:            Toggle regexp/litteral search.\n
-C-down         Follow in other buffer.\n
-C-up           Follow in other buffer.\n
-M-p/n          Precedent and next `ioccur-history' element."))
+C-p or <up>     precedent line.\n
+C-v and M-v     scroll up and down.\n
+C-z or <right>  jump without quitting loop.\n
+C-j or <left>   jump and kill `ioccur-buffer'.\n
+RET             exit keeping `ioccur-buffer'.\n
+DEL             remove last character entered.\n
+C-k             Kill current input.\n
+C-w             Yank stuff at point.\n
+C-g             quit and restore buffer.\n
+C-|             Toggle split window.\n
+C-:             Toggle regexp/litteral search.\n
+C-down          Follow in other buffer.\n
+C-up            Follow in other buffer.\n
+M-p/n           Precedent and next `ioccur-history' element."))
            wrong-regexp)
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
@@ -804,6 +804,13 @@ for commands provided in the `ioccur-buffer'."
                            ""))
              (len      (length init-str))
              (curpos   (point))
+             (cur-mode (with-current-buffer ioccur-current-buffer
+                         (prog1
+                             major-mode
+                           ;; If current `major-mode' is wdired
+                           ;; Turn it off.
+                           (when (eq major-mode 'wdired-mode)
+                             (wdired-change-to-dired-mode)))))
              str-no-prop)
         (set-text-properties 0 len nil init-str)
         (setq str-no-prop init-str)
@@ -832,6 +839,8 @@ for commands provided in the `ioccur-buffer'."
                    (message nil) (ioccur-save-history))
                   (t                      ; Jump keeping `ioccur-buffer'.
                    (ioccur-jump) (other-window 1) (ioccur-save-history)))
+            ;; Maybe reenable `wdired-mode'.
+            (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
             (setq ioccur-count-occurences 0)
             (setq ioccur-quit-flag nil)
             (setq ioccur-search-function ioccur-default-search-function))))))
