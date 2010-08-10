@@ -163,7 +163,7 @@ Use here one of `re-search-forward' or `search-forward'."
 
 ;;; Internal variables.
 ;; String entered in prompt.
-(defvar ioccur-search-pattern "")
+(defvar ioccur-pattern "")
 ;; The ioccur timer.
 (defvar ioccur-search-timer nil)
 ;; Signal C-g hit.
@@ -450,7 +450,7 @@ Goto NUMLINE."
 
 (defun ioccur-jump ()
   "Jump to line in other buffer and put an overlay on it.
-Move point to first occurence of `ioccur-search-pattern'."
+Move point to first occurence of `ioccur-pattern'."
   (let* ((line           (buffer-substring (point-at-bol) (point-at-eol)))
          (pos            (string-to-number line))
          (back-search-fn (if (eq ioccur-search-function 're-search-forward)
@@ -461,10 +461,10 @@ Move point to first occurence of `ioccur-search-pattern'."
       (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos)
       ;; Go to beginning of first occurence in this line
-      ;; of what match `ioccur-search-pattern'.
+      ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
-                     ioccur-search-pattern (point-at-eol) t)
-        (funcall back-search-fn ioccur-search-pattern (point-at-bol) t))
+                     ioccur-pattern (point-at-eol) t)
+        (funcall back-search-fn ioccur-pattern (point-at-bol) t))
       (ioccur-color-matched-line))))
 
 ;;;###autoload
@@ -536,7 +536,7 @@ Move point to first occurence of `ioccur-search-pattern'."
         (or chr evt))))
 
 (defun ioccur-read-search-input (initial-input start-point)
-  "Read each keyboard input and add it to `ioccur-search-pattern'.
+  "Read each keyboard input and add it to `ioccur-pattern'.
 INITIAL-INPUT is a string given as default input, generally thing at point.
 START-POINT is the point where we start searching in buffer."
   (let* ((prompt         (propertize ioccur-search-prompt
@@ -552,7 +552,7 @@ START-POINT is the point where we start searching in buffer."
          yank-point)
     (unless (string= initial-input "")
       (loop for char across initial-input do (push char tmp-list)))
-    (setq ioccur-search-pattern initial-input)
+    (setq ioccur-pattern initial-input)
     ;; Cycle history function.
     ;;
     (flet ((cycle-hist (arg)
@@ -584,12 +584,12 @@ START-POINT is the point where we start searching in buffer."
                            (setq tmp-list nil)
                            (loop for char across cur-hist-elm
                               do (push char tmp-list))
-                           (setq ioccur-search-pattern cur-hist-elm)))
+                           (setq ioccur-pattern cur-hist-elm)))
                        ;; First call use car of history ring.
                        (setq tmp-list nil)
                        (loop for char across cur-hist-elm
                           do (push char tmp-list))
-                       (setq ioccur-search-pattern cur-hist-elm)
+                       (setq ioccur-pattern cur-hist-elm)
                        (setq start-hist t)))
                  (message "No history available.") (sit-for 2) t))
            ;; Insert INITIAL-INPUT.
@@ -610,7 +610,7 @@ START-POINT is the point where we start searching in buffer."
                (ioccur-cancel-search))))
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
-                          (concat prompt ioccur-search-pattern))))
+                          (concat prompt ioccur-pattern))))
                (message nil)
                (case char
                  ((not (?\M-p ?\M-n ?\t C-tab)) ; Reset history
@@ -655,7 +655,7 @@ START-POINT is the point where we start searching in buffer."
                   (with-current-buffer ioccur-current-buffer
                     (goto-char old-yank-point)
                     (setq yank-point old-yank-point))
-                  (kill-new ioccur-search-pattern) (setq tmp-list ()) t)
+                  (kill-new ioccur-pattern) (setq tmp-list ()) t)
                  (?\C-y                         ; Yank from `kill-ring'.
                   (setq initial-input (car kill-ring))
                   (insert-initial-input) t)
@@ -687,7 +687,7 @@ START-POINT is the point where we start searching in buffer."
                                            (this-single-command-raw-keys))
                                    unread-command-events))
                       nil))))
-        (setq ioccur-search-pattern (apply 'string (reverse tmp-list)))))))
+        (setq ioccur-pattern (apply 'string (reverse tmp-list)))))))
 
 (defun ioccur-print-buffer (regexp)
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
@@ -744,7 +744,7 @@ M-p/n           Precedent and next `ioccur-history' element."))
          ioccur-search-delay 'repeat
          #'(lambda ()
              (ioccur-print-buffer
-              ioccur-search-pattern)))))
+              ioccur-pattern)))))
 
 
 ;;;###autoload
@@ -850,16 +850,16 @@ for commands provided in the `ioccur-buffer'."
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
   ;; Push elm in history if not already there or empty.
-  (unless (or (member ioccur-search-pattern ioccur-history)
-              (string= ioccur-search-pattern ""))
-    (push ioccur-search-pattern ioccur-history))
+  (unless (or (member ioccur-pattern ioccur-history)
+              (string= ioccur-pattern ""))
+    (push ioccur-pattern ioccur-history))
   ;; If elm already exists in history ring
   ;; push it on top of stack.
   (let ((pos-hist-elm (ioccur-position
-                       ioccur-search-pattern
+                       ioccur-pattern
                        ioccur-history :test 'equal)))
     (unless (string= (car ioccur-history)
-                     ioccur-search-pattern)
+                     ioccur-pattern)
       (push (pop (nthcdr pos-hist-elm ioccur-history))
             ioccur-history)))
   (when (> (length ioccur-history) ioccur-max-length-history)
