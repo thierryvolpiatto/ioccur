@@ -607,7 +607,14 @@ START-POINT is the point where we start searching in buffer."
            ;;
            (stop-timer ()
              (when ioccur-search-timer
-               (ioccur-cancel-search))))
+               (ioccur-cancel-search)))
+           ;; Kill pattern
+           ;;
+           (kill (str)
+             (with-current-buffer ioccur-current-buffer
+               (goto-char old-yank-point)
+               (setq yank-point old-yank-point))
+             (kill-new str) (setq tmp-list ())))
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt ioccur-pattern))))
@@ -652,10 +659,11 @@ START-POINT is the point where we start searching in buffer."
                       (setq ioccur-search-function 're-search-forward)) t)
                  (?\C-k                         ; Kill input.
                   (start-timer)
-                  (with-current-buffer ioccur-current-buffer
-                    (goto-char old-yank-point)
-                    (setq yank-point old-yank-point))
-                  (kill-new ioccur-pattern) (setq tmp-list ()) t)
+                  (kill ioccur-pattern) t)
+                 (?\M-k                         ; Kill input as sexp.
+                  (start-timer)
+                  (kill (prin1-to-string ioccur-pattern))
+                  (setq ioccur-quit-flag t) nil)
                  (?\C-y                         ; Yank from `kill-ring'.
                   (setq initial-input (car kill-ring))
                   (insert-initial-input) t)
@@ -698,21 +706,22 @@ START-POINT is the point where we start searching in buffer."
                          cur-method)
                  'face 'ioccur-title-face
                  'help-echo
-"C-n or <down>  next line.\n
-C-p or <up>     precedent line.\n
-C-v and M-v     scroll up and down.\n
-C-z or <right>  jump without quitting loop.\n
-C-j or <left>   jump and kill `ioccur-buffer'.\n
-RET             exit keeping `ioccur-buffer'.\n
-DEL             remove last character entered.\n
-C-k             Kill current input.\n
-C-w             Yank stuff at point.\n
-C-g             quit and restore buffer.\n
-C-|             Toggle split window.\n
-C-:             Toggle regexp/litteral search.\n
-C-down          Follow in other buffer.\n
-C-up            Follow in other buffer.\n
-M-p/n           Precedent and next `ioccur-history' element."))
+"C-n or <down>      next line.\n
+C-p or <up>         precedent line.\n
+C-v and M-v/C-t     scroll up and down.\n
+C-z or <right>      jump without quitting loop.\n
+C-j or <left>       jump and kill `ioccur-buffer'.\n
+RET                 exit keeping `ioccur-buffer'.\n
+DEL                 remove last character entered.\n
+C-k                 Kill current input.\n
+M-k                 Kill current input as sexp.\n
+C-w                 Yank stuff at point.\n
+C-g                 quit and restore buffer.\n
+C-|                 Toggle split window.\n
+C-:                 Toggle regexp/litteral search.\n
+C-down or C-u       Follow in other buffer.\n
+C-up/d or C-d       Follow in other buffer.\n
+M-p/n or tab/S-tab  History."))
            wrong-regexp)
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
@@ -762,6 +771,7 @@ C-j or <left>  jump and kill `ioccur-buffer'.
 RET            exit keeping `ioccur-buffer'.
 DEL            remove last character entered.
 C-k            Kill current input.
+M-k             Kill current input as sexp.
 C-w            Yank stuff at point.
 C-g            quit and restore buffer.
 C-|            Toggle split window.
