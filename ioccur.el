@@ -89,11 +89,11 @@
 
 (defcustom ioccur-mode-line-string
   (if (window-system)
-      " RET:Exit, C-j/left:Jump&quit, C-z/right:Jump, C-k/x:Kill(as sexp), \
-M-p/n:Hist, C/M-v:Scroll, C-down/up:Follow, C-w:Yank tap"
+      " RET:Exit,C-g:Quit,C-j/left:Jump&quit,C-z/right:Jump,\
+C-k/x:Kill(as sexp),M-p/n:Hist,C/M-v:Scroll,C-down/up:Follow,C-w:Yank tap"
 
-      " RET:Exit, C-j:Jump&quit, C-z:Jump, C-k/x:Kill(as sexp), \
-S-/Tab:Hist, C-v/t:Scroll, C-d/u:Follow, C-w:Yank tap")
+      " RET:Exit,C-g:Quit,C-j:Jump&quit,C-z:Jump,C-k/x:Kill(as sexp),\
+S-/Tab:Hist,C-v/t:Scroll,C-d/u:Follow,C-w:Yank tap")
 
   "*Minimal documentation of `ioccur' commands displayed in mode-line.
 Set it to nil to remove doc in mode-line."
@@ -699,31 +699,35 @@ START-POINT is the point where we start searching in buffer."
 
 (defun ioccur-print-buffer (regexp)
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
+  (unless (window-system) (setq tooltip-use-echo-area t) (tooltip-mode 1))
   (let* ((cur-method (if (eq ioccur-search-function 're-search-forward)
                          "Regexp" "Literal"))
-         (title (propertize
-                 (format "* Ioccur %s searching %s"
-                         cur-method (if (window-system)
-                                        "* (`C-:' to Toggle Method, Mouse over for help.)"
-                                        "* (`C-l' to Toggle Method.)"))
-                 'face 'ioccur-title-face
-                 'help-echo
-"C-n or <down>      next line.\n
-C-p or <up>         precedent line.\n
-C-v and M-v/C-t     scroll up and down.\n
-C-z or <right>      jump without quitting loop.\n
-C-j or <left>       jump and kill `ioccur-buffer'.\n
-RET                 exit keeping `ioccur-buffer'.\n
-DEL                 remove last character entered.\n
-C-k                 Kill current input.\n
-M-k/C-x             Kill current input as sexp.\n
-C-w                 Yank stuff at point.\n
-C-g                 quit and restore buffer.\n
-C-|                 Toggle split window.\n
-C-:/l               Toggle regexp/litteral search.\n
-C-down or C-u       Follow in other buffer.\n
-C-up/d or C-d       Follow in other buffer.\n
-M-p/n or tab/S-tab  History."))
+         (title      (propertize
+                      (format
+                       "* Ioccur %s searching %s"
+                       cur-method
+                       (if (window-system)
+                           "* (`C-:' to Toggle Method, Mouse over for help.)"
+                           "* (`C-l' to Toggle Method.)"))
+                      'face 'ioccur-title-face
+                      'help-echo
+                      "                  Ioccur map:\n
+C-n or <down>      Next line.\n
+C-p or <up>        Precedent line.\n
+C-v and M-v/C-t    Scroll up and down.\n
+C-z or <right>     Jump without quitting loop.\n
+C-j or <left>      Jump and kill `ioccur-buffer'.\n
+RET                Exit keeping `ioccur-buffer'.\n
+DEL                Remove last character entered.\n
+C-k                Kill current input.\n
+M-k/C-x            Kill current input as sexp.\n
+C-w                Yank stuff at point.\n
+C-g                Quit and restore buffer.\n
+C-|                Toggle split window.\n
+C-:/l              Toggle regexp/litteral search.\n
+C-down or C-u      Follow in other buffer.\n
+C-up/d or C-d      Follow in other buffer.\n
+M-p/n or tab/S-tab History."))
            wrong-regexp)
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
