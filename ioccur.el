@@ -129,6 +129,11 @@ Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'symbol)
 
+(defcustom ioccur-read-char-or-event-skip-read-key nil
+  "*Force not using `read-key' even if bounded."
+    :group 'ioccur
+    :type 'boolean)
+
 ;;; Faces.
 (defface ioccur-overlay-face
     '((t (:background "Green4" :underline t)))
@@ -529,7 +534,8 @@ Move point to first occurence of `ioccur-pattern'."
 
 (defun ioccur-read-char-or-event (prompt)
   "Replace `read-key' when not available using PROMPT."
-  (if (fboundp 'read-key)
+  (if (and (fboundp 'read-key)
+           (not ioccur-read-char-or-event-skip-read-key))
       (read-key prompt)
       (let* ((chr (condition-case nil (read-char prompt) (error nil)))
              (evt (unless chr (read-event prompt))))
@@ -542,7 +548,8 @@ START-POINT is the point where we start searching in buffer."
   (let* ((prompt         (propertize ioccur-search-prompt
                                      'face 'minibuffer-prompt))
          (inhibit-quit   (or (eq system-type 'windows-nt)
-                             (not (fboundp 'read-key))))
+                             (not (fboundp 'read-key))
+                             ioccur-read-char-or-event-skip-read-key))
          (tmp-list       ())
          (it-prec        nil)
          (it-next        nil)
