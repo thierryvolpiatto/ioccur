@@ -193,6 +193,8 @@ Use here one of `re-search-forward' or `search-forward'."
 (defvar ioccur-success nil)
 ;; Search function actually in use.
 (defvar ioccur-search-function ioccur-default-search-function)
+;; Message to send when ioccur exit
+(defvar ioccur-message nil)
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -669,8 +671,11 @@ START-POINT is the point where we start searching in buffer."
                   (kill ioccur-pattern) t)
                  ((?\M-k ?\C-x)                         ; Kill input as sexp.
                   (start-timer)
-                  (kill (prin1-to-string ioccur-pattern))
-                  (setq ioccur-quit-flag t) nil)
+                  (let ((sexp (prin1-to-string ioccur-pattern)))
+                    (kill sexp)
+                    (setq ioccur-quit-flag t)
+                    (setq ioccur-message (format "Killed: %s" sexp)))
+                  nil)
                  (?\C-y                         ; Yank from `kill-ring'.
                   (setq initial-input (car kill-ring))
                   (insert-initial-input) t)
@@ -768,6 +773,9 @@ M-p/n or tab/S-tab History."))
              (ioccur-print-buffer
               ioccur-pattern)))))
 
+(defun ioccur-send-message ()
+  "Send message defined in `ioccur-message'."
+  (message ioccur-message))
 
 ;;;###autoload
 (defun ioccur (&optional initial-input)
@@ -858,16 +866,17 @@ for commands provided in the `ioccur-buffer'."
                    (when ioccur-match-overlay
                      (delete-overlay ioccur-match-overlay))
                    (delete-other-windows) (goto-char curpos)
-                   (message nil))
+                   (ioccur-send-message))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
                    (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
-                   (message nil) (ioccur-save-history))
+                   (ioccur-send-message) (ioccur-save-history))
                   (t                      ; Jump keeping `ioccur-buffer'.
                    (ioccur-jump) (other-window 1) (ioccur-save-history)))
             ;; Maybe reenable `wdired-mode'.
             (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
             (setq ioccur-count-occurences 0)
             (setq ioccur-quit-flag nil)
+            (setq ioccur-message nil)
             (setq ioccur-search-function ioccur-default-search-function))))))
 
 (defun ioccur-save-history ()
