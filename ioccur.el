@@ -866,7 +866,8 @@ for commands provided in the `ioccur-buffer'."
                    (when ioccur-match-overlay
                      (delete-overlay ioccur-match-overlay))
                    (delete-other-windows) (goto-char curpos)
-                   (ioccur-send-message))
+                   (ioccur-send-message)
+                   (when ioccur-message (ioccur-save-history)))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
                    (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
                    (ioccur-send-message) (ioccur-save-history))
