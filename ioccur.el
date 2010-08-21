@@ -129,10 +129,10 @@ Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'symbol)
 
-(defcustom ioccur-read-char-or-event-skip-read-key nil
-  "*Force not using `read-key' even if bounded."
-    :group 'ioccur
-    :type 'boolean)
+(defvar ioccur-read-char-or-event-skip-read-key nil
+  "*Force not using `read-key' even if bounded.
+You should not have to set this yourself.
+Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
 
 ;;; Faces.
 (defface ioccur-overlay-face
@@ -661,14 +661,14 @@ START-POINT is the point where we start searching in buffer."
                   (ioccur-scroll-other-window-up) t)
                  (?\C-|                         ; Toggle split window.
                   (ioccur-split-window) t)
-                 ((?\C-: ?\C-l)                         ; Toggle regexp/litteral search.
+                 ((?\C-: ?\C-l)                 ; Toggle regexp/litteral search.
                   (if (eq ioccur-search-function 're-search-forward)
                       (setq ioccur-search-function 'search-forward)
                       (setq ioccur-search-function 're-search-forward)) t)
                  (?\C-k                         ; Kill input.
                   (start-timer)
                   (kill ioccur-pattern) t)
-                 ((?\M-k ?\C-x)                         ; Kill input as sexp.
+                 ((?\M-k ?\C-x)                 ; Kill input as sexp.
                   (start-timer)
                   (let ((sexp (prin1-to-string ioccur-pattern)))
                     (kill sexp)
