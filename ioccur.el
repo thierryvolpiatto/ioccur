@@ -557,7 +557,6 @@ START-POINT is the point where we start searching in buffer."
          (it-next        nil)
          (cur-hist-elm   (car ioccur-history))
          (start-hist     nil) ; Flag to notify if cycling history started.
-         (old-yank-point start-point)
          yank-point)
     (unless (string= initial-input "")
       (loop for char across initial-input do (push char tmp-list)))
@@ -621,8 +620,8 @@ START-POINT is the point where we start searching in buffer."
            ;;
            (kill (str)
              (with-current-buffer ioccur-current-buffer
-               (goto-char old-yank-point)
-               (setq yank-point old-yank-point))
+               (goto-char start-point)
+               (setq yank-point start-point))
              (kill-new str) (setq tmp-list ())))
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
@@ -647,8 +646,8 @@ START-POINT is the point where we start searching in buffer."
                  (?\d                           ; Delete backward with DEL.
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
-                    (goto-char old-yank-point)
-                    (setq yank-point old-yank-point))
+                    (goto-char start-point)
+                    (setq yank-point start-point))
                   (pop tmp-list) t)
                  (?\C-g                         ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
@@ -683,7 +682,7 @@ START-POINT is the point where we start searching in buffer."
                   (start-timer)
                   (with-current-buffer ioccur-current-buffer
                     ;; Start to initial point if C-w have never been hit.
-                    (unless yank-point (setq yank-point old-yank-point))
+                    (unless yank-point (setq yank-point start-point))
                     ;; After a search `ioccur-print-results' have put point
                     ;; to point-max, so reset position.
                     (when yank-point (goto-char yank-point))
