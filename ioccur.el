@@ -376,7 +376,7 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
              (unwind-protect
                   (progn
                     (switch-to-buffer buf)
-                    (ioccur regexp)
+                    (ioccur regexp (point-min) (point-max))
                     ;; Exit if we jump to this `ioccur-current-buffer',
                     ;; otherwise, if C-g is hitten,
                     ;; go back to buffer completion list.
@@ -417,7 +417,7 @@ See `ioccur-find-buffer-matching1'."
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
   (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
-    (other-window 1) (ioccur)))
+    (other-window 1) (call-interactively 'ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
