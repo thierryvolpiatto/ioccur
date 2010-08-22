@@ -376,7 +376,7 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
              (unwind-protect
                   (progn
                     (switch-to-buffer buf)
-                    (ioccur regexp (point-min) (point-max))
+                    (ioccur regexp)
                     ;; Exit if we jump to this `ioccur-current-buffer',
                     ;; otherwise, if C-g is hitten,
                     ;; go back to buffer completion list.
@@ -417,7 +417,7 @@ See `ioccur-find-buffer-matching1'."
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
   (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
-    (other-window 1) (call-interactively 'ioccur)))
+    (other-window 1) (ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
@@ -777,7 +777,7 @@ M-p/n or tab/S-tab History."))
   (message ioccur-message))
 
 ;;;###autoload
-(defun ioccur (initial-input beg end)
+(defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
 With a prefix arg search symbol at point (INITIAL-INPUT).
 
@@ -820,17 +820,19 @@ Special NOTE for terms:
  
 When you quit incremental search with RET, see `ioccur-mode'
 for commands provided in the `ioccur-buffer'."
-  (interactive "P\nr")
+  (interactive "P")
   (save-restriction
     (setq ioccur-exit-and-quit-p nil)
     (setq ioccur-success nil)
     (setq ioccur-current-buffer (buffer-name (current-buffer)))
-    (if (region-active-p)
-        (narrow-to-region beg end)
-        (setq beg (point-min) end (point-max)))
     (message "Fontifying buffer...Please wait it could be long.")
-    (jit-lock-fontify-now beg end)
-    (message nil)
+    (if (region-active-p)
+        (let ((beg (region-beginning))
+              (end (region-end)))
+          (narrow-to-region beg end)
+          (jit-lock-fontify-now beg end))
+        (jit-lock-fontify-now))
+    (message nil) ; Remove pecedent message.
     (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
     (if (and (not initial-input)
              (get-buffer ioccur-buffer)
