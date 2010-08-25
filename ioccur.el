@@ -871,6 +871,9 @@ for commands provided in the `ioccur-buffer'."
                      (delete-overlay ioccur-match-overlay))
                    (delete-other-windows) (goto-char curpos)
                    (ioccur-send-message)
+                   ;; If `ioccur-message' is non--nil, thats mean we exit
+                   ;; with a specific action other than `C-g',
+                   ;; so we save history.
                    (when ioccur-message (ioccur-save-history)))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
                    (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
@@ -882,9 +885,7 @@ for commands provided in the `ioccur-buffer'."
             (setq ioccur-count-occurences 0)
             (setq ioccur-quit-flag nil)
             (setq ioccur-message nil)
-            (setq ioccur-search-function ioccur-default-search-function)
-            (with-current-buffer ioccur-current-buffer
-              (setq mark-active nil)))))))
+            (setq ioccur-search-function ioccur-default-search-function))))))
 
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
