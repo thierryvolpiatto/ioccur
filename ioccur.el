@@ -664,7 +664,7 @@ START-POINT is the point where we start searching in buffer."
                   (ioccur-scroll-other-window-down) t)
                  ((?\C-t ?\M-v prior)           ; Scroll up.
                   (ioccur-scroll-other-window-up) t)
-                 (?\C-|                         ; Toggle split window.
+                 (?\C-s                         ; Toggle split window.
                   (ioccur-split-window) t)
                  ((?\C-: ?\C-l)                 ; Toggle regexp/litteral search.
                   (if (eq ioccur-search-function 're-search-forward)
@@ -739,7 +739,7 @@ C-k                Kill current input.\n
 M-k/C-x            Kill current input as sexp.\n
 C-w                Yank stuff at point.\n
 C-g                Quit and restore buffer.\n
-C-|                Toggle split window.\n
+C-s                Toggle split window.\n
 C-:/l              Toggle regexp/litteral search.\n
 C-down or C-u      Follow in other buffer.\n
 C-up/d or C-d      Follow in other buffer.\n
@@ -801,7 +801,7 @@ C-k            Kill current input.
 M-k             Kill current input as sexp.
 C-w            Yank stuff at point.
 C-g            quit and restore buffer.
-C-|            Toggle split window.
+C-s            Toggle split window.
 C-:            Toggle regexp/litteral search.
 C-down         Follow in other buffer.
 C-up           Follow in other buffer.
