@@ -129,6 +129,11 @@ Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'symbol)
 
+(defcustom ioccur-highlight-match-p t
+  "*Highlight matchs in `ioccur-buffer' when non--nil."
+  :group 'ioccur
+  :type 'boolean)
+
 (defvar ioccur-read-char-or-event-skip-read-key nil
   "*Force not using `read-key' even if bounded.
 You should not have to set this yourself.
@@ -762,7 +767,8 @@ M-p/n or tab/S-tab History."))
                      (format " in %s" ioccur-current-buffer)
                      'face 'underline) "\n\n")
             (ioccur-color-current-line)
-            (ioccur-highlight-match (point) regexp)))))
+            (when ioccur-highlight-match-p
+              (ioccur-highlight-match (point) regexp))))))
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
