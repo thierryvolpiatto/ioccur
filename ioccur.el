@@ -935,7 +935,7 @@ of matched line in `ioccur-current-buffer'."
   "Highlight all occurences of REGEXP from BEG to end of `ioccur-buffer'."
   (save-excursion
     (goto-char beg)
-    (while (re-search-forward regexp nil t)
+    (while (funcall ioccur-search-function regexp nil t)
       (put-text-property (match-beginning 0) (point)
                          'face 'ioccur-regexp-face))))
             
