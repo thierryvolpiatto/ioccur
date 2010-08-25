@@ -761,7 +761,8 @@ M-p/n or tab/S-tab History."))
                     (propertize
                      (format " in %s" ioccur-current-buffer)
                      'face 'underline) "\n\n")
-            (ioccur-color-current-line)))))
+            (ioccur-color-current-line)
+            (ioccur-highlight-match (point) regexp)))))
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
@@ -930,6 +931,14 @@ of matched line in `ioccur-current-buffer'."
             (make-overlay (point-at-bol) (1+ (point-at-eol)))))
   (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
+(defun ioccur-highlight-match (beg regexp)
+  "Highlight all occurences of REGEXP from BEG to end of `ioccur-buffer'."
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward regexp nil t)
+      (put-text-property (match-beginning 0) (point)
+                         'face 'ioccur-regexp-face))))
+            
 
 (provide 'ioccur)
 
