@@ -471,7 +471,7 @@ Move point to first occurence of `ioccur-pattern'."
                 (string= line "Ioccur"))
       (pop-to-buffer ioccur-current-buffer t)
       (show-all) ; For org and outline enabled buffers.
-      (ioccur-goto-line pos)
+      (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
