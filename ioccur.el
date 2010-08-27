@@ -287,10 +287,21 @@ Special commands:
          for count from 0
          when (funcall ioccur-search-function regexp (point-at-eol) t)
          do (ioccur-print-line
-             (buffer-substring (point-at-bol) (point-at-eol)) count)
+             (buffer-substring (point-at-bol) (point-at-eol)) count regexp)
          do (forward-line 1)))))
 
-(defun ioccur-print-line (line nline)
+(defun ioccur-highlight-match-on-line (regexp)
+  "Highlight all occurences of REGEXP on precedent line."
+  (save-excursion
+    (forward-line -1)
+    (while (and (funcall ioccur-search-function regexp (point-at-eol) t)
+                ;; If length of match is null exit loop.
+                ;; e.g when searching "^".
+                (> (- (match-end 0) (match-beginning 0)) 0))
+      (put-text-property (match-beginning 0) (point)
+                         'face 'ioccur-regexp-face))))
+
+(defun ioccur-print-line (line nline regexp)
   "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let ((lineno     (int-to-string (1+ nline)))
@@ -299,7 +310,9 @@ Special commands:
       (insert " " (propertize
                    lineno 'face 'ioccur-num-line-face
                    'help-echo line)
-              ":" trunc-line "\n"))))
+              ":" trunc-line "\n")
+      (when ioccur-highlight-match-p
+        (ioccur-highlight-match-on-line regexp)))))
 
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
   "Remove indentation and truncate LINE of num COLUMNS.
@@ -766,9 +779,7 @@ M-p/n or tab/S-tab History."))
                     (propertize
                      (format " in %s" ioccur-current-buffer)
                      'face 'underline) "\n\n")
-            (ioccur-color-current-line)
-            (when ioccur-highlight-match-p
-              (ioccur-highlight-match (point) regexp))))))
+            (ioccur-color-current-line)))))
 
 (defun ioccur-start-timer ()
   "Start ioccur incremental timer."
@@ -938,18 +949,6 @@ of matched line in `ioccur-current-buffer'."
             (make-overlay (point-at-bol) (1+ (point-at-eol)))))
   (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
-(defun ioccur-highlight-match (beg regexp)
-  "Highlight all occurences of REGEXP from BEG to end of `ioccur-buffer'."
-  (save-excursion
-    (goto-char beg)
-    (while (and (funcall ioccur-search-function regexp nil t)
-                (not (eobp))
-                ;; If length of match is null exit loop.
-                ;; e.g when searching "^".
-                (> (- (match-end 0) (match-beginning 0)) 0))
-      (put-text-property (match-beginning 0) (point)
-                         'face 'ioccur-regexp-face))))
-            
 
 (provide 'ioccur)
 
