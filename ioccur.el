@@ -101,7 +101,9 @@ Set it to nil to remove doc in mode-line."
   :type  'string)
 
 (defcustom ioccur-length-line 80
-  "*Length of the line displayed in ioccur buffer."
+  "*Length of the line displayed in ioccur buffer.
+When set to nil lines displayed in `ioccur-buffer' will not be modified.
+See `ioccur-truncate-line'."
   :group 'ioccur
   :type 'integer)
 
@@ -302,13 +304,19 @@ Special commands:
               ":" trunc-line "\n"))))
 
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
-  "Remove indentation and truncate LINE of num COLUMNS.
-COLUMNS default value is `ioccur-length-line'."
+  "Remove indentation in LINE and truncate modified LINE of num COLUMNS.
+COLUMNS default value is `ioccur-length-line'.
+If COLUMNS is nil return LINE.
+If COLUMNS is 0 only remove indentation.
+So just set `ioccur-length-line' to nil if you don't want lines truncated."
   (let* ((bol-reg (if (string-match "^\t" line)
                       "\\(^\t*\\)" "\\(^ *\\)"))
          (ltp     (replace-regexp-in-string bol-reg "" line)))
-    (if (> (length ltp) ioccur-length-line)
-        (substring ltp 0 ioccur-length-line) ltp)))
+    (cond ((and columns (> (length ltp) columns))
+           (substring ltp 0 columns))
+          ((and columns (< (length ltp) columns))
+           ltp)
+          (t line))))
 
 (defun ioccur-buffer-contain (buffer regexp)
   "Return BUFFER if it contain an occurence of REGEXP."
@@ -471,7 +479,7 @@ Move point to first occurence of `ioccur-pattern'."
                 (string= line "Ioccur"))
       (pop-to-buffer ioccur-current-buffer t)
       (show-all) ; For org and outline enabled buffers.
-      (ioccur-goto-line pos)
+      (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
