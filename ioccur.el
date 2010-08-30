@@ -476,9 +476,10 @@ Move point to first occurence of `ioccur-pattern'."
          (pos            (string-to-number line))
          (back-search-fn (if (eq ioccur-search-function 're-search-forward)
                              're-search-backward 'search-backward)))
-    (unless (or (string= line "")
-                (string= line "Ioccur"))
-      (if win-conf (set-window-configuration win-conf) (pop-to-buffer ioccur-current-buffer t))
+    (unless (string= line "")
+      (if win-conf
+          (set-window-configuration win-conf)
+          (pop-to-buffer ioccur-current-buffer t))
       (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
