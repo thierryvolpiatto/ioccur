@@ -430,7 +430,8 @@ See `ioccur-find-buffer-matching1'."
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
   (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
-    (other-window 1) (ioccur)))
+    (other-window 1) (kill-buffer ioccur-buffer)
+    (delete-other-windows) (ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
@@ -468,7 +469,7 @@ Goto NUMLINE."
   (interactive)
   (ioccur-forward-line -1))
 
-(defun ioccur-jump ()
+(defun ioccur-jump (&optional win-conf)
   "Jump to line in other buffer and put an overlay on it.
 Move point to first occurence of `ioccur-pattern'."
   (let* ((line           (buffer-substring (point-at-bol) (point-at-eol)))
@@ -477,7 +478,7 @@ Move point to first occurence of `ioccur-pattern'."
                              're-search-backward 'search-backward)))
     (unless (or (string= line "")
                 (string= line "Ioccur"))
-      (pop-to-buffer ioccur-current-buffer t)
+      (if win-conf (set-window-configuration win-conf) (pop-to-buffer ioccur-current-buffer t))
       (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
@@ -488,11 +489,11 @@ Move point to first occurence of `ioccur-pattern'."
       (ioccur-color-matched-line))))
 
 ;;;###autoload
-(defun ioccur-jump-and-quit ()
+(defun ioccur-jump-and-quit (&optional win-conf)
   "Jump to line in other buffer and quit search buffer."
   (interactive)
-  (when (ioccur-jump)
-    (delete-other-windows)
+  (when (ioccur-jump win-conf)
+    (unless win-conf (delete-other-windows))
     (sit-for 0.3)
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
@@ -845,14 +846,16 @@ for commands provided in the `ioccur-buffer'."
   (if (and (not initial-input)
            (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
-      ;; An hidden `ioccur-buffer' exists jump to it.
+      ;; An hidden `ioccur-buffer' exists jump to it and reuse it.
       (pop-to-buffer ioccur-buffer t)
-      ;; `ioccur-buffer' doesn't exists or is not visible, start searching.
+      ;; `ioccur-buffer' doesn't exists or is visible, start searching
+      ;; Creating a new `ioccur-buffer' or reusing the visible one after
+      ;; erasing it.
       (let* ((init-str (if initial-input
                            (if (stringp initial-input)
-                               initial-input
-                               (thing-at-point 'symbol))
+                               initial-input (thing-at-point 'symbol))
                            ""))
+             (win-conf (current-window-configuration))
              (len      (length init-str))
              (curpos   (point))
              (cur-mode (with-current-buffer ioccur-current-buffer
@@ -890,7 +893,7 @@ for commands provided in the `ioccur-buffer'."
                    ;; so we save history.
                    (when ioccur-message (ioccur-save-history)))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
-                   (ioccur-jump-and-quit) (kill-buffer ioccur-buffer)
+                   (ioccur-jump-and-quit win-conf) (kill-buffer ioccur-buffer)
                    (ioccur-send-message) (ioccur-save-history))
                   (t                   ; Jump keeping `ioccur-buffer'.
                    (ioccur-jump) (other-window 1) (ioccur-save-history)))
