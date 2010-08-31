@@ -429,8 +429,9 @@ See `ioccur-find-buffer-matching1'."
   "Restart `ioccur' from `ioccur-buffer'.
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
-  (when (and (eq major-mode 'ioccur-mode) (eq (count-windows) 2))
-    (other-window 1) (kill-buffer ioccur-buffer)
+  (when (eq major-mode 'ioccur-mode)
+    (pop-to-buffer ioccur-current-buffer);(other-window 1)
+    (kill-buffer ioccur-buffer)
     (delete-other-windows) (ioccur)))
 
 ;;;###autoload
@@ -479,7 +480,7 @@ Move point to first occurence of `ioccur-pattern'."
     (unless (string= line "")
       (if win-conf
           (set-window-configuration win-conf)
-          (pop-to-buffer ioccur-current-buffer t))
+          (pop-to-buffer ioccur-current-buffer))
       (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
@@ -490,11 +491,11 @@ Move point to first occurence of `ioccur-pattern'."
       (ioccur-color-matched-line))))
 
 ;;;###autoload
-(defun ioccur-jump-and-quit (&optional win-conf)
+(defun ioccur-jump-and-quit ()
   "Jump to line in other buffer and quit search buffer."
   (interactive)
-  (when (ioccur-jump win-conf)
-    (unless win-conf (delete-other-windows))
+  (when (ioccur-jump ioccur-last-window-configuration)
+    ;(unless win-conf (delete-other-windows))
     (sit-for 0.3)
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
@@ -793,6 +794,7 @@ M-p/n or tab/S-tab History."))
   "Send message defined in `ioccur-message'."
   (message ioccur-message))
 
+(defvar ioccur-last-window-configuration nil)
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
@@ -844,6 +846,7 @@ for commands provided in the `ioccur-buffer'."
   (message "Fontifying buffer...Please wait it could be long.")
   (jit-lock-fontify-now) (message nil)
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
+  (setq ioccur-last-window-configuration (current-window-configuration))
   (if (and (not initial-input)
            (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
@@ -856,7 +859,7 @@ for commands provided in the `ioccur-buffer'."
                            (if (stringp initial-input)
                                initial-input (thing-at-point 'symbol))
                            ""))
-             (win-conf (current-window-configuration))
+             ;
              (len      (length init-str))
              (curpos   (point))
              (cur-mode (with-current-buffer ioccur-current-buffer
@@ -894,10 +897,11 @@ for commands provided in the `ioccur-buffer'."
                    ;; so we save history.
                    (when ioccur-message (ioccur-save-history)))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
-                   (ioccur-jump-and-quit win-conf) (kill-buffer ioccur-buffer)
+                   (ioccur-jump-and-quit)
+                   (kill-buffer ioccur-buffer)
                    (ioccur-send-message) (ioccur-save-history))
                   (t                   ; Jump keeping `ioccur-buffer'.
-                   (ioccur-jump) (other-window 1) (ioccur-save-history)))
+                   (ioccur-jump) (pop-to-buffer ioccur-buffer) (ioccur-save-history)))
             ;; Maybe reenable `wdired-mode'.
             (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
             (setq ioccur-count-occurences 0)
