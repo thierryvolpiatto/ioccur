@@ -440,7 +440,7 @@ See `ioccur-find-buffer-matching1'."
 
 ;;;###autoload
 (defun ioccur-quit ()
-  "Quit and kill ioccur buffer."
+  "Quit `ioccur-buffer'."
   (interactive)
   (let ((pos (with-current-buffer ioccur-current-buffer (point))))
     (when ioccur-match-overlay
