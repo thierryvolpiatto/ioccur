@@ -442,11 +442,13 @@ See `ioccur-find-buffer-matching1'."
 (defun ioccur-quit ()
   "Quit and kill ioccur buffer."
   (interactive)
-  (when ioccur-match-overlay
-    (delete-overlay ioccur-match-overlay))
-  (quit-window)
-  (other-window 1)
-  (delete-other-windows))
+  (let ((pos (with-current-buffer ioccur-current-buffer (point))))
+    (when ioccur-match-overlay
+      (delete-overlay ioccur-match-overlay))
+    (quit-window)
+    (set-window-configuration ioccur-last-window-configuration)
+    (pop-to-buffer ioccur-current-buffer)
+    (goto-char pos)))
 
 (defun ioccur-goto-line (numline)
   "Non--interactive version of `goto-line'.
