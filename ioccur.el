@@ -202,6 +202,9 @@ Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
 (defvar ioccur-search-function ioccur-default-search-function)
 ;; Message to send when ioccur exit
 (defvar ioccur-message nil)
+;; Store last window-configuration
+(defvar ioccur-last-window-configuration nil)
+
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -430,9 +433,10 @@ See `ioccur-find-buffer-matching1'."
 `ioccur-buffer' is erased and a new search is started."
   (interactive)
   (when (eq major-mode 'ioccur-mode)
-    (pop-to-buffer ioccur-current-buffer);(other-window 1)
+    (pop-to-buffer ioccur-current-buffer)
     (kill-buffer ioccur-buffer)
-    (delete-other-windows) (ioccur)))
+    (set-window-configuration ioccur-last-window-configuration)
+    (ioccur)))
 
 ;;;###autoload
 (defun ioccur-quit ()
@@ -794,7 +798,6 @@ M-p/n or tab/S-tab History."))
   "Send message defined in `ioccur-message'."
   (message ioccur-message))
 
-(defvar ioccur-last-window-configuration nil)
 ;;;###autoload
 (defun ioccur (&optional initial-input)
   "Incremental search of lines in current buffer matching input.
