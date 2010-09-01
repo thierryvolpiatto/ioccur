@@ -508,36 +508,38 @@ Move point to first occurence of `ioccur-pattern'."
 (defun ioccur-jump-without-quit ()
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
-  (when (ioccur-jump) (other-window 1)))
+  (when (ioccur-jump) (pop-to-buffer ioccur-buffer)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
   "Scroll other window down."
   (interactive)
-  (scroll-other-window 1))
+  (let ((other-window-scroll-buffer ioccur-current-buffer))
+    (scroll-other-window 1)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-up ()
   "Scroll other window up."
   (interactive)
-  (scroll-other-window -1))
+  (let ((other-window-scroll-buffer ioccur-current-buffer))
+    (scroll-other-window -1)))
 
 (defun ioccur-scroll (n)
-  "Scroll other buffer N lines and move overlay accordingly."
+  "Scroll `ioccur-buffer' and `ioccur-current-buffer' synchronously."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
   (when (ioccur-jump)
-    (other-window 1)))
+    (pop-to-buffer ioccur-buffer)))
 
 ;;;###autoload
 (defun ioccur-scroll-down ()
-  "Scroll other buffer down."
+  "Scroll down `ioccur-buffer' and `ioccur-current-buffer' synchronously."
   (interactive)
   (ioccur-scroll 1))
 
 ;;;###autoload
 (defun ioccur-scroll-up ()
-  "Scroll other buffer up."
+  "Scroll up `ioccur-buffer' and `ioccur-current-buffer' synchronously."
   (interactive)
   (ioccur-scroll -1))
 
