@@ -499,7 +499,6 @@ Move point to first occurence of `ioccur-pattern'."
   "Jump to line in other buffer and quit search buffer."
   (interactive)
   (when (ioccur-jump ioccur-last-window-configuration)
-    ;(unless win-conf (delete-other-windows))
     (sit-for 0.3)
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
@@ -525,7 +524,7 @@ Move point to first occurence of `ioccur-pattern'."
     (scroll-other-window -1)))
 
 (defun ioccur-scroll (n)
-  "Scroll `ioccur-buffer' and `ioccur-current-buffer' synchronously."
+  "Scroll `ioccur-buffer' and `ioccur-current-buffer' simultaneously."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
   (when (ioccur-jump)
@@ -533,13 +532,13 @@ Move point to first occurence of `ioccur-pattern'."
 
 ;;;###autoload
 (defun ioccur-scroll-down ()
-  "Scroll down `ioccur-buffer' and `ioccur-current-buffer' synchronously."
+  "Scroll down `ioccur-buffer' and `ioccur-current-buffer' simultaneously."
   (interactive)
   (ioccur-scroll 1))
 
 ;;;###autoload
 (defun ioccur-scroll-up ()
-  "Scroll up `ioccur-buffer' and `ioccur-current-buffer' synchronously."
+  "Scroll up `ioccur-buffer' and `ioccur-current-buffer' simultaneously."
   (interactive)
   (ioccur-scroll -1))
 
@@ -892,14 +891,15 @@ for commands provided in the `ioccur-buffer'."
               (setq ioccur-quit-flag t))
             (cond (ioccur-quit-flag ; C-g hit or empty `ioccur-buffer'.
                    (kill-buffer ioccur-buffer)
-                   (switch-to-buffer ioccur-current-buffer)
+                   (pop-to-buffer ioccur-current-buffer)
                    (when ioccur-match-overlay
                      (delete-overlay ioccur-match-overlay))
-                   (delete-other-windows) (goto-char curpos)
+                   (set-window-configuration ioccur-last-window-configuration)
+                   (goto-char curpos)
                    (ioccur-send-message)
                    ;; If `ioccur-message' is non--nil, thats mean we exit
                    ;; with a specific action other than `C-g',
-                   ;; so we save history.
+                   ;; e.g kill-as-sexp, so we save history.
                    (when ioccur-message (ioccur-save-history)))
                   (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
                    (ioccur-jump-and-quit)
