@@ -159,7 +159,12 @@ Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
 
 (defface ioccur-regexp-face
     '((t (:background "DeepSkyBlue" :underline t)))
-  "Face for highlight found regexp in incremental buffer."
+  "Face for highlight found regexp in `ioccur-buffer'."
+  :group 'ioccur-faces)
+
+(defface ioccur-match-face
+    '((t (:background "DeepSkyBlue")))
+  "Face for highlight matches in `ioccur-buffer'."
   :group 'ioccur-faces)
 
 (defface ioccur-num-line-face
@@ -965,7 +970,7 @@ of matched line in `ioccur-current-buffer'."
                 ;; e.g when searching "^".
                 (> (- (match-end 0) (match-beginning 0)) 0))
       (put-text-property (match-beginning 0) (point)
-                         'face 'ioccur-regexp-face))))
+                         'face 'ioccur-match-face))))
             
 
 (provide 'ioccur)
