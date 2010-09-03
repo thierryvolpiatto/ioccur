@@ -301,9 +301,8 @@ Special commands:
     (let ((lineno     (int-to-string (1+ nline)))
           (trunc-line (ioccur-truncate-line line)))
       (incf ioccur-count-occurences)
-      (insert " " (propertize
-                   lineno 'face 'ioccur-num-line-face
-                   'help-echo line)
+      (insert " " (propertize lineno 'face 'ioccur-num-line-face
+                              'help-echo line)
               ":" trunc-line "\n"))))
 
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
@@ -312,14 +311,10 @@ COLUMNS default value is `ioccur-length-line'.
 If COLUMNS is nil return LINE.
 If COLUMNS is 0 only remove indentation.
 So just set `ioccur-length-line' to nil if you don't want lines truncated."
-  (let* ((bol-reg (if (string-match "^\t" line)
-                      "\\(^\t*\\)" "\\(^ *\\)"))
-         (ltp     (replace-regexp-in-string bol-reg "" line)))
-    (cond ((and columns (> (length ltp) columns))
-           (substring ltp 0 columns))
-          ((and columns (< (length ltp) columns))
-           ltp)
-          (t line))))
+  (when (string-match "^[[:blank:]]*" line)
+    (setq line (replace-match "" nil nil line)))
+  (if (and columns (> (length line) columns))
+      (substring line 0 columns) line))
 
 (defun ioccur-buffer-contain (buffer regexp)
   "Return BUFFER if it contain an occurence of REGEXP."
@@ -865,7 +860,6 @@ for commands provided in the `ioccur-buffer'."
                            (if (stringp initial-input)
                                initial-input (thing-at-point 'symbol))
                            ""))
-             ;
              (len      (length init-str))
              (curpos   (point))
              (cur-mode (with-current-buffer ioccur-current-buffer
