@@ -313,13 +313,16 @@ Special commands:
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
   "Remove indentation in LINE and truncate modified LINE of num COLUMNS.
 COLUMNS default value is `ioccur-length-line'.
-If COLUMNS is nil return LINE.
-If COLUMNS is 0 only remove indentation.
+If COLUMNS is nil return original indented LINE.
+If COLUMNS is 0 only remove indentation in LINE.
 So just set `ioccur-length-line' to nil if you don't want lines truncated."
-  (when (string-match "^[[:blank:]]*" line)
-    (setq line (replace-match "" nil nil line)))
-  (if (and columns (> (length line) columns))
-      (substring line 0 columns) line))
+  (let ((old-line line))
+    (when (string-match "^[[:blank:]]*" line)
+      ;; Remove tab and spaces at beginning of LINE.
+      (setq line (replace-match "" nil nil line)))
+    (if (and columns (> columns 0) (> (length line) columns))
+        (substring line 0 columns)
+        (if columns line old-line))))
 
 (defun ioccur-buffer-contain (buffer regexp)
   "Return BUFFER if it contain an occurence of REGEXP."
