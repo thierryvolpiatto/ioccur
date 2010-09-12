@@ -67,6 +67,8 @@
     (define-key map (kbd "C-p")      'ioccur-precedent-line)
     (define-key map (kbd "R")        'ioccur-restart)
     (define-key map (kbd "C-|")      'ioccur-split-window)
+    (define-key map (kbd "M-<")      'ioccur-beginning-of-buffer)
+    (define-key map (kbd "M->")      'ioccur-end-of-buffer)
     map)
   "Keymap used for ioccur commands.")
 
@@ -463,7 +465,7 @@ Goto NUMLINE."
   (let (pos)
     (save-excursion
       (forward-line n) (forward-line 0)
-      (when (looking-at "^ [0-9]+")
+      (when (looking-at "^\\s-[0-9]+:")
         (forward-line 0) (setq pos (point))))
   (when pos (goto-char pos) (ioccur-color-current-line))))
 
@@ -478,6 +480,25 @@ Goto NUMLINE."
   "Goto precedent line if it is not an empty line."
   (interactive)
   (ioccur-forward-line -1))
+
+;;;###autoload
+(defun ioccur-beginning-of-buffer ()
+  "Goto beginning of `ioccur-buffer'."
+  (interactive)
+  (when (looking-at "^\\s-[0-9]+:")
+    (goto-char (point-min))
+    (re-search-forward "^\\s-[0-9]+:" nil t)
+    (forward-line 0)
+    (ioccur-color-current-line)))
+
+;;;###autoload
+(defun ioccur-end-of-buffer ()
+  "Go to end of `ioccur-buffer'."
+  (interactive)
+  (when (looking-at "^\\s-[0-9]+:")
+    (goto-char (point-max))
+    (forward-line -1)
+    (ioccur-color-current-line)))
 
 (defun ioccur-jump (&optional win-conf)
   "Jump to line in other buffer and put an overlay on it.
@@ -663,6 +684,12 @@ START-POINT is the point where we start searching in buffer."
                  ((up ?\C-p)                    ; Precedent line.
                   (stop-timer) (ioccur-precedent-line)
                   (ioccur-color-current-line) t)
+                 (?\M-<                         ; Beginning of buffer.
+                  (when (ioccur-beginning-of-buffer)
+                    (stop-timer)) t)
+                 (?\M->                         ; End of buffer.
+                  (when (ioccur-end-of-buffer)
+                    (stop-timer)) t)
                  ((?\C-d C-down)                ; Scroll both windows down.
                   (stop-timer) (ioccur-scroll-down) t)
                  ((?\C-u C-up)                  ; Scroll both windows up.
@@ -764,6 +791,7 @@ C-s                Toggle split window.\n
 C-:/l              Toggle regexp/litteral search.\n
 C-down or C-u      Follow in other buffer.\n
 C-up/d or C-d      Follow in other buffer.\n
+M-<, M->           Beginning and end of buffer.\n
 M-p/n or tab/S-tab History."))
            wrong-regexp)
     (if (string= regexp "")
@@ -827,8 +855,9 @@ C-:            Toggle regexp/litteral search.
 C-down         Follow in other buffer.
 C-up           Follow in other buffer.
 M-p/n          Precedent and next `ioccur-history' element.
+M-<, M->       Beginning and end of buffer.
 
-Unlike minibuffer history, ioccur history is a ring (no end):
+Unlike minibuffer history, cycling in ioccur history have no end:
 
 M-p ,-->A B C D E F G H I---,
     |                       |
@@ -838,7 +867,6 @@ M-n ,-->I H G F E D C B A---,
     |                       |
     `---A B C D E F G H I<--'
 
-If a region is active, search only in this region.
 
 Special NOTE for terms:
 =======================
