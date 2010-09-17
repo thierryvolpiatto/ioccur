@@ -736,6 +736,7 @@ START-POINT is the point where we start searching in buffer."
                  (?\C-s                         ; Toggle split window.
                   (ioccur-split-window) t)
                  ((?\C-: ?\C-l)                 ; Toggle regexp/litteral search.
+                  (start-timer)
                   (if (eq ioccur-search-function 're-search-forward)
                       (setq ioccur-search-function 'search-forward)
                       (setq ioccur-search-function 're-search-forward)) t)
