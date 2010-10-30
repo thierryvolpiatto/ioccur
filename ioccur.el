@@ -554,7 +554,8 @@ Move point to first occurence of `ioccur-pattern'."
 (defun ioccur-jump-without-quit ()
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
-  (when (ioccur-jump) (pop-to-buffer ioccur-buffer)))
+  (and (ioccur-jump ioccur-last-window-configuration)
+       (switch-to-buffer-other-window ioccur-buffer)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
@@ -574,8 +575,8 @@ Move point to first occurence of `ioccur-pattern'."
   "Scroll `ioccur-buffer' and `ioccur-current-buffer' simultaneously."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
-  (when (ioccur-jump)
-    (pop-to-buffer ioccur-buffer)))
+  (and (ioccur-jump ioccur-last-window-configuration)
+       (switch-to-buffer-other-window ioccur-buffer)))
 
 ;;;###autoload
 (defun ioccur-scroll-down ()
