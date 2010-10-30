@@ -554,7 +554,8 @@ Move point to first occurence of `ioccur-pattern'."
 (defun ioccur-jump-without-quit ()
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
-  (when (ioccur-jump) (pop-to-buffer ioccur-buffer)))
+  (and (ioccur-jump ioccur-last-window-configuration)
+       (switch-to-buffer-other-window ioccur-buffer t)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
@@ -574,8 +575,8 @@ Move point to first occurence of `ioccur-pattern'."
   "Scroll `ioccur-buffer' and `ioccur-current-buffer' simultaneously."
   (ioccur-forward-line n)
   (ioccur-color-current-line)
-  (when (ioccur-jump)
-    (pop-to-buffer ioccur-buffer)))
+  (and (ioccur-jump ioccur-last-window-configuration)
+       (switch-to-buffer-other-window ioccur-buffer t)))
 
 ;;;###autoload
 (defun ioccur-scroll-down ()
@@ -908,7 +909,7 @@ for commands provided in the `ioccur-buffer'."
            (get-buffer ioccur-buffer)
            (not (get-buffer-window ioccur-buffer)))
       ;; An hidden `ioccur-buffer' exists jump to it and reuse it.
-      (pop-to-buffer ioccur-buffer t)
+      (switch-to-buffer-other-window ioccur-buffer t)
       ;; `ioccur-buffer' doesn't exists or is visible, start searching
       ;; Creating a new `ioccur-buffer' or reusing the visible one after
       ;; erasing it.
@@ -928,7 +929,7 @@ for commands provided in the `ioccur-buffer'."
              str-no-prop)
         (set-text-properties 0 len nil init-str)
         (setq str-no-prop init-str)
-        (pop-to-buffer (get-buffer-create ioccur-buffer) t)
+        (switch-to-buffer-other-window (get-buffer-create ioccur-buffer) t)
         (ioccur-mode)
         (unwind-protect
              ;; Start incremental search.
