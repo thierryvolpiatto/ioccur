@@ -555,7 +555,7 @@ Move point to first occurence of `ioccur-pattern'."
   "Jump to line in `ioccur-current-buffer' without quiting."
   (interactive)
   (and (ioccur-jump ioccur-last-window-configuration)
-         (switch-to-buffer-other-window ioccur-buffer t)))
+       (switch-to-buffer-other-window ioccur-buffer t)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
