@@ -231,6 +231,11 @@ Special commands:
   (loop for i in seq for index from 0
      when (funcall test i item) return index))
 
+;; Compatibility
+(unless (fboundp 'window-system)
+  (defun window-system (&optional arg)
+    window-system))
+
 ;;; Iterators.
 (defmacro ioccur-iter-list (list-obj)
   "Return an iterator from list LIST-OBJ."
