@@ -4,7 +4,7 @@
 
 ;; Copyright (C) 2010 Thierry Volpiatto, all rights reserved.
 
-;; Compatibility: GNU Emacs 23.1+
+;; Compatibility: GNU Emacs >=22.3
 
 ;; X-URL: http://mercurial.intuxication.org/hg/ioccur
 
