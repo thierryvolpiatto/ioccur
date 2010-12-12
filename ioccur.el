@@ -329,7 +329,7 @@ Special commands:
 (defun ioccur-highlight-match-on-line (regexp)
   "Highlight all occurences of REGEXP on precedent line."
   (save-excursion
-    (forward-line -1)
+    (forward-line -1) (re-search-forward "\\(\\s-[0-9]+:\\)" nil t)
     (while (and (funcall ioccur-search-function regexp (point-at-eol) t)
                 ;; If length of match is null exit loop.
                 ;; e.g when searching "^".
