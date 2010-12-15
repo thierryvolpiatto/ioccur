@@ -481,12 +481,14 @@ See `ioccur-find-buffer-matching1'."
     (pop-to-buffer ioccur-current-buffer)
     (goto-char pos)))
 
+
 (defun ioccur-goto-line (lineno)
   "Goto LINENO without modifying outline visibility if needed."
   (flet ((gotoline (numline)
            (goto-char (point-min)) (forward-line (1- numline))))
-    (if (or (eq major-mode 'org-mode)
-            outline-minor-mode)
+    (if (and (fboundp 'org-save-outline-visibility)
+             (or (eq major-mode 'org-mode)
+                 outline-minor-mode))
         (progn
           ;; Open all, goto line LINENO, move to
           ;; precedent heading and restore precedent state
@@ -500,6 +502,7 @@ See `ioccur-find-buffer-matching1'."
           ;; Open heading
           (show-subtree)
           (gotoline lineno))
+        (show-all)
         (gotoline lineno))))
 
 (defun ioccur-forward-line (n)
