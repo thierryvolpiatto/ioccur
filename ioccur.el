@@ -481,10 +481,26 @@ See `ioccur-find-buffer-matching1'."
     (pop-to-buffer ioccur-current-buffer)
     (goto-char pos)))
 
-(defun ioccur-goto-line (numline)
-  "Non--interactive version of `goto-line'.
-Goto NUMLINE."
-  (goto-char (point-min)) (forward-line (1- numline)))
+(defun ioccur-goto-line (lineno)
+  "Goto LINENO without modifying outline visibility if needed."
+  (flet ((gotoline (numline)
+           (goto-char (point-min)) (forward-line (1- numline))))
+    (if (or (eq major-mode 'org-mode)
+            outline-minor-mode)
+        (progn
+          ;; Open all, goto line LINENO, move to
+          ;; precedent heading and restore precedent state
+          ;; of visibility.
+          (org-save-outline-visibility nil
+            (show-all)
+            (gotoline lineno)
+            (outline-previous-heading))
+          ;; Make heading visible
+          (outline-show-heading)
+          ;; Open heading
+          (show-subtree)
+          (gotoline lineno))
+        (gotoline lineno))))
 
 (defun ioccur-forward-line (n)
   "Forward N lines but empty one's."
@@ -537,7 +553,6 @@ Move point to first occurence of `ioccur-pattern'."
       (if win-conf
           (set-window-configuration win-conf)
           (pop-to-buffer ioccur-current-buffer))
-      (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
