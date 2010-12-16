@@ -561,7 +561,7 @@ Move point to first occurence of `ioccur-pattern'."
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
                      ioccur-pattern (point-at-eol) t)
-        (funcall back-search-fn ioccur-pattern (point-at-bol) t))
+        (goto-char (match-beginning 0)))
       (ioccur-color-matched-line))))
 
 ;;;###autoload
