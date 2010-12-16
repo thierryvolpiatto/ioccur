@@ -4,7 +4,7 @@
 
 ;; Copyright (C) 2010 Thierry Volpiatto, all rights reserved.
 
-;; Compatibility: GNU Emacs 23.1+
+;; Compatibility: GNU Emacs >=22.3
 
 ;; X-URL: http://mercurial.intuxication.org/hg/ioccur
 
@@ -231,6 +231,11 @@ Special commands:
   (loop for i in seq for index from 0
      when (funcall test i item) return index))
 
+;; Compatibility
+(unless (fboundp 'window-system)
+  (defun window-system (&optional arg)
+    window-system))
+
 ;;; Iterators.
 (defmacro ioccur-iter-list (list-obj)
   "Return an iterator from list LIST-OBJ."
@@ -324,7 +329,7 @@ Special commands:
 (defun ioccur-highlight-match-on-line (regexp)
   "Highlight all occurences of REGEXP on precedent line."
   (save-excursion
-    (forward-line -1)
+    (forward-line -1) (re-search-forward "\\(\\s-[0-9]+:\\)" nil t)
     (while (and (funcall ioccur-search-function regexp (point-at-eol) t)
                 ;; If length of match is null exit loop.
                 ;; e.g when searching "^".
@@ -476,10 +481,29 @@ See `ioccur-find-buffer-matching1'."
     (pop-to-buffer ioccur-current-buffer)
     (goto-char pos)))
 
-(defun ioccur-goto-line (numline)
-  "Non--interactive version of `goto-line'.
-Goto NUMLINE."
-  (goto-char (point-min)) (forward-line (1- numline)))
+
+(defun ioccur-goto-line (lineno)
+  "Goto LINENO without modifying outline visibility if needed."
+  (flet ((gotoline (numline)
+           (goto-char (point-min)) (forward-line (1- numline))))
+    (if (and (fboundp 'org-save-outline-visibility)
+             (or (eq major-mode 'org-mode)
+                 outline-minor-mode))
+        (progn
+          ;; Open all, goto line LINENO, move to
+          ;; precedent heading and restore precedent state
+          ;; of visibility.
+          (org-save-outline-visibility nil
+            (show-all)
+            (gotoline lineno)
+            (outline-previous-heading))
+          ;; Make heading visible
+          (outline-show-heading)
+          ;; Open heading
+          (show-subtree)
+          (gotoline lineno))
+        (show-all)
+        (gotoline lineno))))
 
 (defun ioccur-forward-line (n)
   "Forward N lines but empty one's."
@@ -532,13 +556,12 @@ Move point to first occurence of `ioccur-pattern'."
       (if win-conf
           (set-window-configuration win-conf)
           (pop-to-buffer ioccur-current-buffer))
-      (show-all) ; For org and outline enabled buffers.
       (ioccur-goto-line pos) (recenter)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
                      ioccur-pattern (point-at-eol) t)
-        (funcall back-search-fn ioccur-pattern (point-at-bol) t))
+        (goto-char (match-beginning 0)))
       (ioccur-color-matched-line))))
 
 ;;;###autoload
