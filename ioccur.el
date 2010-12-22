@@ -489,7 +489,7 @@ See `ioccur-find-buffer-matching1'."
         (progn
           (gotoline lineno)
           (org-reveal))
-        (goto-line lineno))))
+        (gotoline lineno))))
 
 (defun ioccur-forward-line (n)
   "Forward N lines but empty one's."
