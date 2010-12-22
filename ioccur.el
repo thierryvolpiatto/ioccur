@@ -482,6 +482,7 @@ See `ioccur-find-buffer-matching1'."
     (goto-char pos)))
 
 (defun ioccur-goto-line (lineno)
+  "Goto LINENO without modifying outline visibility if needed."
   (flet ((gotoline (numline)
            (goto-char (point-min)) (forward-line (1- numline))))
     (if (or (eq major-mode 'org-mode)
