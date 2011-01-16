@@ -138,6 +138,13 @@ Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'boolean)
 
+(defcustom ioccur-fontify-buffer-p t
+  "*Fontify `ioccur-current-buffer' when non--nil.
+This allow to have syntactic coloration in `ioccur-buffer' but
+it slow down the start of ioccur at first time on large buffers."
+  :group 'ioccur
+  :type 'boolean)
+
 (defvar ioccur-read-char-or-event-skip-read-key nil
   "*Force not using `read-key' even if bounded.
 You should not have to set this yourself.
@@ -911,8 +918,9 @@ for commands provided in the `ioccur-buffer'."
   (setq ioccur-exit-and-quit-p nil)
   (setq ioccur-success nil)
   (setq ioccur-current-buffer (buffer-name (current-buffer)))
-  (message "Fontifying buffer...Please wait it could be long.")
-  (jit-lock-fontify-now) (message nil)
+  (when ioccur-fontify-buffer-p
+    (message "Fontifying buffer...Please wait it could be long.")
+    (jit-lock-fontify-now) (message nil))
   (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
   (setq ioccur-last-window-configuration (current-window-configuration))
   (if (and (not initial-input)
