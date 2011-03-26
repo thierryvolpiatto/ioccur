@@ -550,7 +550,7 @@ Move point to first occurence of `ioccur-pattern'."
       (if win-conf
           (set-window-configuration win-conf)
           (pop-to-buffer ioccur-current-buffer))
-      (ioccur-goto-line pos) (recenter)
+      (ioccur-goto-line pos) (recenter) (set-marker (mark-marker) (point))
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
@@ -568,11 +568,12 @@ Move point to first occurence of `ioccur-pattern'."
       (delete-overlay ioccur-match-overlay))))
 
 ;;;###autoload
-(defun ioccur-jump-without-quit ()
-  "Jump to line in `ioccur-current-buffer' without quiting."
+(defun ioccur-jump-without-quit (&optional mark)
+  "Jump to line in `ioccur-current-buffer' without quitting."
   (interactive)
-  (and (ioccur-jump ioccur-last-window-configuration)
-       (switch-to-buffer-other-window ioccur-buffer t)))
+  (when (ioccur-jump ioccur-last-window-configuration)
+    (when mark (push-mark (point) 'nomsg))
+    (switch-to-buffer-other-window ioccur-buffer t)))
 
 ;;;###autoload
 (defun ioccur-scroll-other-window-down ()
@@ -745,6 +746,8 @@ START-POINT is the point where we start searching in buffer."
                   (setq ioccur-quit-flag t) nil)
                  ((right ?\C-z)                 ; Persistent action.
                   (ioccur-jump-without-quit) t)
+                 ((?\C- )                       ; Persistent action save mark.
+                  (ioccur-jump-without-quit t) t)                 
                  ((left ?\C-j)                  ; Jump and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
                  ((next ?\C-v)                  ; Scroll down.
@@ -820,6 +823,7 @@ C-n or <down>      Next line.\n
 C-p or <up>        Precedent line.\n
 C-v and M-v/C-t    Scroll up and down.\n
 C-z or <right>     Jump without quitting loop.\n
+C-TAB              Jump without quitting and save to mark-ring.\n
 C-j or <left>      Jump and kill `ioccur-buffer'.\n
 RET                Exit keeping `ioccur-buffer'.\n
 DEL                Remove last character entered.\n
