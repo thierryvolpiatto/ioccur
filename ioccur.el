@@ -991,12 +991,13 @@ for commands provided in the `ioccur-buffer'."
 
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
-  (setq ioccur-history
-        (cons ioccur-pattern (delete ioccur-pattern ioccur-history)))
-  (when (> (length ioccur-history) ioccur-max-length-history)
-    (setq ioccur-history (delete (car (last ioccur-history))
-                                 ioccur-history)))
-  (setq ioccur-success t))
+  (unless (string= anything-pattern "")
+    (setq ioccur-history
+          (cons ioccur-pattern (delete ioccur-pattern ioccur-history)))
+    (when (> (length ioccur-history) ioccur-max-length-history)
+      (setq ioccur-history (delete (car (last ioccur-history))
+                                   ioccur-history)))
+    (setq ioccur-success t)))
 
 (defun ioccur-cancel-search ()
   "Cancel timer used for ioccur searching."
