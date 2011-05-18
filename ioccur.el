@@ -991,19 +991,8 @@ for commands provided in the `ioccur-buffer'."
 
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
-  ;; Push elm in history if not already there or empty.
-  (unless (or (member ioccur-pattern ioccur-history)
-              (string= ioccur-pattern ""))
-    (push ioccur-pattern ioccur-history))
-  ;; If elm already exists in history ring
-  ;; push it on top of stack.
-  (let ((pos-hist-elm (ioccur-position
-                       ioccur-pattern
-                       ioccur-history :test 'equal)))
-    (unless (string= (car ioccur-history)
-                     ioccur-pattern)
-      (push (pop (nthcdr pos-hist-elm ioccur-history))
-            ioccur-history)))
+  (setq ioccur-history
+        (cons ioccur-pattern (delete ioccur-pattern ioccur-history)))
   (when (> (length ioccur-history) ioccur-max-length-history)
     (setq ioccur-history (delete (car (last ioccur-history))
                                  ioccur-history)))
