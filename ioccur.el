@@ -328,6 +328,7 @@ If ALL is non--nil highlight the whole string STR."
              (point) (point-at-eol)
              '(face ioccur-match-face))  
             (while (and (funcall ioccur-search-function ioccur-pattern nil t)
+                        ;; Don't try to highlight line with a length <= 0.
                         (> (- (match-end 0) (match-beginning 0)) 0))
               (add-text-properties
                (match-beginning 0) (match-end 0)
@@ -340,11 +341,12 @@ If ALL is non--nil highlight the whole string STR."
   (with-current-buffer ioccur-buffer
     (let* ((lineno             (int-to-string (1+ nline)))
            (whole-line-matched (string= match line))
-           (trunc-line         (if ioccur-highlight-match-p
+           (hightline          (if ioccur-highlight-match-p
                                    (ioccur-print-match
-                                    (ioccur-truncate-line line)
+                                    line
                                     whole-line-matched)
-                                   (ioccur-truncate-line line))))
+                                   line))
+           (trunc-line          (ioccur-truncate-line hightline)))
       (incf ioccur-count-occurences)
       (insert " " (propertize lineno 'face 'ioccur-num-line-face
                               'help-echo line)
