@@ -350,18 +350,6 @@ If ALL is non--nil highlight the whole string STR."
                               'help-echo line)
               ":" trunc-line "\n"))))
 
-(defun ioccur-highlight-match-on-line (regexp)
-  "Highlight all occurences of REGEXP on precedent line."
-  (save-excursion
-    (forward-line -1) (re-search-forward "\\(\\s-[0-9]+:\\)" nil t)
-    (while (and (funcall ioccur-search-function regexp (point-at-eol) t)
-                ;; If length of match is null exit loop.
-                ;; e.g when searching "^".
-                (> (- (match-end 0) (match-beginning 0)) 0))
-      (put-text-property (match-beginning 0) (match-end 0); (point)
-                         'face 'ioccur-match-face))))
-
-
 (defun* ioccur-truncate-line (line &optional (columns ioccur-length-line))
   "Remove indentation in LINE and truncate modified LINE of num COLUMNS.
 COLUMNS default value is `ioccur-length-line'.
