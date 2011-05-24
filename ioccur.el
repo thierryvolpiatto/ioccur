@@ -326,7 +326,7 @@ If ALL is non--nil highlight the whole string STR."
         (if all
             (add-text-properties
              (point) (point-at-eol)
-             '(face anything-grep-match))  
+             '(face ioccur-match-face))  
             (while (and (funcall ioccur-search-function ioccur-pattern nil t)
                         (> (- (match-end 0) (match-beginning 0)) 0))
               (add-text-properties
