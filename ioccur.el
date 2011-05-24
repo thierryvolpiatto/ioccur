@@ -315,23 +315,40 @@ Special commands:
              count (match-string 0) regexp)
          do (forward-line 1)))))
 
+
+(defun ioccur-print-match (str &optional all)
+  "Highlight in string STR all occurences matching `ioccur-pattern'.
+If ALL is non--nil highlight the whole string STR."
+  (condition-case nil
+      (with-temp-buffer
+        (insert str)
+        (goto-char (point-min))
+        (if all
+            (add-text-properties
+             (point) (point-at-eol)
+             '(face anything-grep-match))  
+            (while (and (funcall ioccur-search-function ioccur-pattern nil t)
+                        (> (- (match-end 0) (match-beginning 0)) 0))
+              (add-text-properties
+               (match-beginning 0) (match-end 0)
+               '(face ioccur-match-face))))
+        (buffer-string))
+    (error nil)))
+
 (defun ioccur-print-line (line nline match regexp)
   "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let* ((lineno             (int-to-string (1+ nline)))
-           (trunc-line         (ioccur-truncate-line line))
-           (whole-line-matched (string= match line)))
+           (whole-line-matched (string= match line))
+           (trunc-line         (if ioccur-highlight-match-p
+                                   (ioccur-print-match
+                                    (ioccur-truncate-line line)
+                                    whole-line-matched)
+                                   (ioccur-truncate-line line))))
       (incf ioccur-count-occurences)
       (insert " " (propertize lineno 'face 'ioccur-num-line-face
                               'help-echo line)
-              ":" trunc-line "\n")
-      (when ioccur-highlight-match-p
-        (if whole-line-matched ; Regexp match the whole line, highlight it.
-            (save-excursion
-              (forward-line -1) (re-search-forward "\\(\\s-[0-9]+:\\)" nil t)
-              (put-text-property (point) (point-at-eol)
-                                 'face 'ioccur-match-face))
-            (ioccur-highlight-match-on-line regexp))))))
+              ":" trunc-line "\n"))))
 
 (defun ioccur-highlight-match-on-line (regexp)
   "Highlight all occurences of REGEXP on precedent line."
@@ -341,7 +358,7 @@ Special commands:
                 ;; If length of match is null exit loop.
                 ;; e.g when searching "^".
                 (> (- (match-end 0) (match-beginning 0)) 0))
-      (put-text-property (match-beginning 0) (point)
+      (put-text-property (match-beginning 0) (match-end 0); (point)
                          'face 'ioccur-match-face))))
 
 
