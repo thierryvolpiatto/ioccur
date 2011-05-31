@@ -557,7 +557,8 @@ Move point to first occurence of `ioccur-pattern'."
       (if win-conf
           (set-window-configuration win-conf)
           (pop-to-buffer ioccur-current-buffer))
-      (ioccur-goto-line pos) (recenter) (set-marker (mark-marker) (point))
+      (ioccur-goto-line pos)
+      (recenter)
       ;; Go to beginning of first occurence in this line
       ;; of what match `ioccur-pattern'.
       (when (funcall ioccur-search-function
@@ -579,7 +580,8 @@ Move point to first occurence of `ioccur-pattern'."
   "Jump to line in `ioccur-current-buffer' without quitting."
   (interactive)
   (when (ioccur-jump ioccur-last-window-configuration)
-    (when mark (push-mark (point) 'nomsg))
+    (and mark (set-marker (mark-marker) (point))
+         (push-mark (point) 'nomsg))
     (switch-to-buffer-other-window ioccur-buffer t)))
 
 ;;;###autoload
