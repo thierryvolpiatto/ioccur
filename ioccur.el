@@ -950,6 +950,7 @@ for commands provided in the `ioccur-buffer'."
                            ""))
              (len      (length init-str))
              (curpos   (point))
+             (inhibit-read-only t)
              (cur-mode (with-current-buffer ioccur-current-buffer
                          (prog1
                              major-mode
@@ -990,7 +991,10 @@ for commands provided in the `ioccur-buffer'."
                    (kill-buffer ioccur-buffer)
                    (ioccur-send-message) (ioccur-save-history))
                   (t                   ; Jump keeping `ioccur-buffer'.
-                   (ioccur-jump) (pop-to-buffer ioccur-buffer) (ioccur-save-history)))
+                   (ioccur-jump)
+                   (pop-to-buffer ioccur-buffer)
+                   (setq buffer-read-only t)
+                   (ioccur-save-history)))
             ;; Maybe reenable `wdired-mode'.
             (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
             (setq ioccur-count-occurences 0)
