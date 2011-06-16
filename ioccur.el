@@ -961,7 +961,8 @@ for commands provided in the `ioccur-buffer'."
              str-no-prop)
         (set-text-properties 0 len nil init-str)
         (setq str-no-prop init-str)
-        (switch-to-buffer-other-window (get-buffer-create ioccur-buffer) t)
+        ;(switch-to-buffer-other-window (get-buffer-create ioccur-buffer) t)
+        (pop-to-buffer (get-buffer-create ioccur-buffer))
         (ioccur-mode)
         (unwind-protect
              ;; Start incremental search.
