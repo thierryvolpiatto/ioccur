@@ -928,80 +928,81 @@ Special NOTE for terms:
 When you quit incremental search with RET, see `ioccur-mode'
 for commands provided in the `ioccur-buffer'."
   (interactive "P")
-  (setq ioccur-exit-and-quit-p nil)
-  (setq ioccur-success nil)
-  (setq ioccur-current-buffer (buffer-name (current-buffer)))
-  (when ioccur-fontify-buffer-p
-    (message "Fontifying buffer...Please wait it could be long.")
-    (jit-lock-fontify-now) (message nil))
-  (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
-  (setq ioccur-last-window-configuration (current-window-configuration))
-  (if (and (not initial-input)
-           (get-buffer ioccur-buffer)
-           (not (get-buffer-window ioccur-buffer)))
-      ;; An hidden `ioccur-buffer' exists jump to it and reuse it.
-      (switch-to-buffer-other-window ioccur-buffer t)
-      ;; `ioccur-buffer' doesn't exists or is visible, start searching
-      ;; Creating a new `ioccur-buffer' or reusing the visible one after
-      ;; erasing it.
-      (let* ((init-str (if initial-input
-                           (if (stringp initial-input)
-                               initial-input (thing-at-point 'symbol))
-                           ""))
-             (len      (length init-str))
-             (curpos   (point))
-             (inhibit-read-only t)
-             (cur-mode (with-current-buffer ioccur-current-buffer
-                         (prog1
-                             major-mode
-                           ;; If current `major-mode' is wdired
-                           ;; Turn it off.
-                           (when (eq major-mode 'wdired-mode)
-                             (wdired-change-to-dired-mode)))))
-             str-no-prop)
-        (set-text-properties 0 len nil init-str)
-        (setq str-no-prop init-str)
-        ;(switch-to-buffer-other-window (get-buffer-create ioccur-buffer) t)
-        (pop-to-buffer (get-buffer-create ioccur-buffer))
-        (ioccur-mode)
-        (unwind-protect
-             ;; Start incremental search.
-             (progn
-               (ioccur-start-timer)
-               (ioccur-read-search-input str-no-prop curpos))
-          ;; At this point incremental search loop is exited.
-          (progn
-            (ioccur-cancel-search)
-            (kill-local-variable 'mode-line-format)
-            (when (equal (buffer-substring (point-at-bol) (point-at-eol)) "")
-              (setq ioccur-quit-flag t))
-            (cond (ioccur-quit-flag ; C-g hit or empty `ioccur-buffer'.
-                   (kill-buffer ioccur-buffer)
-                   (pop-to-buffer ioccur-current-buffer)
-                   (when ioccur-match-overlay
-                     (delete-overlay ioccur-match-overlay))
-                   (set-window-configuration ioccur-last-window-configuration)
-                   (goto-char curpos)
-                   (ioccur-send-message)
-                   ;; If `ioccur-message' is non--nil, thats mean we exit
-                   ;; with a specific action other than `C-g',
-                   ;; e.g kill-as-sexp, so we save history.
-                   (when ioccur-message (ioccur-save-history)))
-                  (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
-                   (ioccur-jump-and-quit)
-                   (kill-buffer ioccur-buffer)
-                   (ioccur-send-message) (ioccur-save-history))
-                  (t                   ; Jump keeping `ioccur-buffer'.
-                   (ioccur-jump)
-                   (pop-to-buffer ioccur-buffer)
-                   (setq buffer-read-only t)
-                   (ioccur-save-history)))
-            ;; Maybe reenable `wdired-mode'.
-            (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
-            (setq ioccur-count-occurences 0)
-            (setq ioccur-quit-flag nil)
-            (setq ioccur-message nil)
-            (setq ioccur-search-function ioccur-default-search-function))))))
+  (let (pop-up-frames)
+    (setq ioccur-exit-and-quit-p nil)
+    (setq ioccur-success nil)
+    (setq ioccur-current-buffer (buffer-name (current-buffer)))
+    (when ioccur-fontify-buffer-p
+      (message "Fontifying buffer...Please wait it could be long.")
+      (jit-lock-fontify-now) (message nil))
+    (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
+    (setq ioccur-last-window-configuration (current-window-configuration))
+    (if (and (not initial-input)
+             (get-buffer ioccur-buffer)
+             (not (get-buffer-window ioccur-buffer)))
+        ;; An hidden `ioccur-buffer' exists jump to it and reuse it.
+        (switch-to-buffer-other-window ioccur-buffer t)
+        ;; `ioccur-buffer' doesn't exists or is visible, start searching
+        ;; Creating a new `ioccur-buffer' or reusing the visible one after
+        ;; erasing it.
+        (let* ((init-str (if initial-input
+                             (if (stringp initial-input)
+                                 initial-input (thing-at-point 'symbol))
+                             ""))
+               (len      (length init-str))
+               (curpos   (point))
+               (inhibit-read-only t)
+               (cur-mode (with-current-buffer ioccur-current-buffer
+                           (prog1
+                               major-mode
+                             ;; If current `major-mode' is wdired
+                             ;; Turn it off.
+                             (when (eq major-mode 'wdired-mode)
+                               (wdired-change-to-dired-mode)))))
+               str-no-prop)
+          (set-text-properties 0 len nil init-str)
+          (setq str-no-prop init-str)
+                                        ;(switch-to-buffer-other-window (get-buffer-create ioccur-buffer) t)
+          (pop-to-buffer (get-buffer-create ioccur-buffer))
+          (ioccur-mode)
+          (unwind-protect
+               ;; Start incremental search.
+               (progn
+                 (ioccur-start-timer)
+                 (ioccur-read-search-input str-no-prop curpos))
+            ;; At this point incremental search loop is exited.
+            (progn
+              (ioccur-cancel-search)
+              (kill-local-variable 'mode-line-format)
+              (when (equal (buffer-substring (point-at-bol) (point-at-eol)) "")
+                (setq ioccur-quit-flag t))
+              (cond (ioccur-quit-flag ; C-g hit or empty `ioccur-buffer'.
+                     (kill-buffer ioccur-buffer)
+                     (pop-to-buffer ioccur-current-buffer)
+                     (when ioccur-match-overlay
+                       (delete-overlay ioccur-match-overlay))
+                     (set-window-configuration ioccur-last-window-configuration)
+                     (goto-char curpos)
+                     (ioccur-send-message)
+                     ;; If `ioccur-message' is non--nil, thats mean we exit
+                     ;; with a specific action other than `C-g',
+                     ;; e.g kill-as-sexp, so we save history.
+                     (when ioccur-message (ioccur-save-history)))
+                    (ioccur-exit-and-quit-p ; Jump and kill `ioccur-buffer'.
+                     (ioccur-jump-and-quit)
+                     (kill-buffer ioccur-buffer)
+                     (ioccur-send-message) (ioccur-save-history))
+                    (t                 ; Jump keeping `ioccur-buffer'.
+                     (ioccur-jump)
+                     (pop-to-buffer ioccur-buffer)
+                     (setq buffer-read-only t)
+                     (ioccur-save-history)))
+              ;; Maybe reenable `wdired-mode'.
+              (when (eq cur-mode 'wdired-mode) (wdired-change-to-wdired-mode))
+              (setq ioccur-count-occurences 0)
+              (setq ioccur-quit-flag nil)
+              (setq ioccur-message nil)
+              (setq ioccur-search-function ioccur-default-search-function)))))))
 
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
