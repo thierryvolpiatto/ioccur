@@ -806,6 +806,14 @@ START-POINT is the point where we start searching in buffer."
                  ((backtab ?\M-n)               ; Next history elm.
                   (start-timer)
                   (cycle-hist 1))
+                 (?\C-q                         ; quoted-insert
+                  (stop-timer)
+                  (let ((char (with-temp-buffer
+                                (call-interactively 'quoted-insert)
+                                (buffer-string))))
+                    (push (string-to-char char) tmp-list))
+                  (start-timer)
+                  t)
                  (t                             ; Store character.
                   (start-timer)
                   (if (characterp char)
