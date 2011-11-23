@@ -2,7 +2,7 @@
 
 ;; Author: Thierry Volpiatto <thierry dot volpiatto at gmail dot com>
 
-;; Copyright (C) 2010 Thierry Volpiatto, all rights reserved.
+;; Copyright (C) 2010~2011 Thierry Volpiatto, all rights reserved.
 
 ;; Compatibility: GNU Emacs >=22.3
 
@@ -37,6 +37,15 @@
 ;; Do C-h f ioccur or ioccur-find-buffer-matching for more info.
 
 ;;; Commentary:
+;;
+;; This package provide similar functionality as occur but is incremental.
+;;
+;; You can jump and quit to an occurence or jump
+;; and save the search buffer (ioccur-buffer) for further use.
+;; It is possible to toggle literal and regexp searching while running.
+;; It is auto documented both in mode-line and tooltip.
+;; It have its own history `ioccur-history' which is a real ring.
+;; etc...
 ;;
 ;; To save `ioccur-history', use desktop, adding that to your .emacs:
 ;; (add-to-list 'desktop-globals-to-save 'ioccur-history)
