@@ -147,7 +147,7 @@ Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'boolean)
 
-(defcustom ioccur-fontify-buffer-p t
+(defcustom ioccur-fontify-buffer-p nil
   "*Fontify `ioccur-current-buffer' when non--nil.
 This allow to have syntactic coloration in `ioccur-buffer' but
 it slow down the start of ioccur at first time on large buffers."
