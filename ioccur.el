@@ -89,12 +89,12 @@
 
 ;;; User variables.
 (defcustom ioccur-search-delay 0.5
-  "*During incremental searching, display is updated all these seconds."
+  "During incremental searching, display is updated all these seconds."
   :group 'ioccur
   :type  'integer)
 
 (defcustom ioccur-search-prompt "Pattern: "
-  "*Prompt used for `ioccur-occur'."
+  "Prompt used for `ioccur-occur'."
   :group 'ioccur
   :type  'string)
 
@@ -106,57 +106,48 @@ C-k/x:Kill(as sexp),M-p/n:Hist,C/M-v:Scroll,C-down/up:Follow,C-w:Yank tap"
       " RET:Exit,C-g:Quit,C-j:Jump&quit,C-z:Jump,C-k/x:Kill(as sexp),\
 S-/Tab:Hist,C-v/t:Scroll,C-d/u:Follow,C-w:Yank tap")
 
-  "*Minimal documentation of `ioccur' commands displayed in mode-line.
+  "Minimal documentation of `ioccur' commands displayed in mode-line.
 Set it to nil to remove doc in mode-line."
   :group 'ioccur
   :type  'string)
 
 (defcustom ioccur-length-line 80
-  "*Length of the line displayed in ioccur buffer.
+  "Length of the line displayed in ioccur buffer.
 When set to nil lines displayed in `ioccur-buffer' will not be modified.
 See `ioccur-truncate-line'."
   :group 'ioccur
   :type 'integer)
 
 (defcustom ioccur-max-length-history 100
-  "*Maximum number of element stored in `ioccur-history'."
+  "Maximum number of element stored in `ioccur-history'."
   :group 'ioccur
   :type 'integer)
 
-(defcustom ioccur-buffer-completion-style 'anything
-  "*Type of completing read style you prefer to choose buffers \
-in `ioccur-find-buffer-matching'.
-It can be one of 'anything or 'ido.
-When nil or if anything is not found or `ido-mode' is off,
-fallback to classic `completing-read'.
-NOTE:
-To have anything completion you need a recent version of
-`anything-config.el'.
-To have ido completion, you have to enable `ido-mode'."
+(defcustom ioccur-buffer-completion-use-ido nil
+  "Use ido to choose buffers in `ioccur-find-buffer-matching'."
   :group 'ioccur
   :type 'symbol)
 
 (defcustom ioccur-default-search-function 're-search-forward
-  "*Default search function.
+  "Default search function.
 Use here one of `re-search-forward' or `search-forward'."
   :group 'ioccur
   :type 'symbol)
 
 (defcustom ioccur-highlight-match-p t
-  "*Highlight matchs in `ioccur-buffer' when non--nil."
+  "Highlight matchs in `ioccur-buffer' when non--nil."
   :group 'ioccur
   :type 'boolean)
 
 (defcustom ioccur-fontify-buffer-p nil
-  "*Fontify `ioccur-current-buffer' when non--nil.
+  "Fontify `ioccur-current-buffer' when non--nil.
 This allow to have syntactic coloration in `ioccur-buffer' but
 it slow down the start of ioccur at first time on large buffers."
   :group 'ioccur
   :type 'boolean)
 
 (defvar ioccur-read-char-or-event-skip-read-key nil
-  "*Force not using `read-key' even if bounded.
-You should not have to set this yourself.
+  "Force not using `read-key' to read input in minibuffer even if bounded.
 Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
 
 ;;; Faces.
@@ -418,8 +409,8 @@ Hitting C-g in a `ioccur' session will return to completion list.
 Hitting C-g in the completion list will jump back to initial buffer.
 
 The buffer completion list is provided by one of:
-`anything-comp-read', `ido-completing-read', `completing-read'
-depending on which `ioccur-buffer-completion-style' you have choosen."
+`ido-completing-read', `completing-read'
+depending on which `ioccur-buffer-completion-use-ido' you have choosen."
   ;; Remove doublons maybe added by minibuffer in `ioccur-history'.
   (setq ioccur-history
         (loop with hist for i in ioccur-history
@@ -436,13 +427,10 @@ depending on which `ioccur-buffer-completion-style' you have choosen."
 
     (labels
         ((find-buffer ()
-           (let ((buf (cond ((and (fboundp 'anything-comp-read)
-                                  (eq ioccur-buffer-completion-style 'anything))
-                             (anything-comp-read prompt buf-list :must-match t))
-                            ((and ido-mode
-                                  (eq ioccur-buffer-completion-style 'ido))
-                             (ido-completing-read prompt buf-list nil t))
-                            (t (completing-read prompt buf-list nil t)))))
+           (let ((buf (if (and ido-mode
+                               (eq ioccur-buffer-completion-use-ido 'ido))
+                          (ido-completing-read prompt buf-list nil t)
+                          (completing-read prompt buf-list nil t))))
              (unwind-protect
                   (progn
                     (switch-to-buffer buf)
