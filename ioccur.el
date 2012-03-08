@@ -720,7 +720,8 @@ START-POINT is the point where we start searching in buffer."
              (with-current-buffer ioccur-current-buffer
                (goto-char start-point)
                (setq yank-point start-point))
-             (kill-new str) (setq tmp-list ()))
+             (kill-new (substring str (- (1- (length tmp-list)) index)))
+             (setq tmp-list (nthcdr index tmp-list)))
            ;; Add cursor in minibuffer
            ;;
            (set-cursor (str pos)
