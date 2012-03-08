@@ -770,7 +770,6 @@ START-POINT is the point where we start searching in buffer."
                   (with-current-buffer ioccur-current-buffer
                     (goto-char start-point)
                     (setq yank-point start-point))
-                  ;(pop (nthcdr index tmp-list))
                   (setf (nthcdr index tmp-list) (cdr (nthcdr index tmp-list)))
                   t)
                  (?\C-g                         ; Quit and restore buffers.
@@ -843,6 +842,10 @@ START-POINT is the point where we start searching in buffer."
                   (setq index (min (1+ index) (length tmp-list))) t)
                  (?\C-f                         ; forward-char.
                   (setq index (max (1- index) 0)) t)
+                 (?\C-a                         ; move bol.
+                  (setq index (length tmp-list)) t)
+                 (?\C-e                         ; move eol.
+                  (setq index 0) t)
                  (t                             ; Store character.
                   (start-timer)
                   (if (characterp char)
