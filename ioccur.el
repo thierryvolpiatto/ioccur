@@ -186,6 +186,10 @@ Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
   "Face for highlight wrong regexp message in ioccur buffer."
   :group 'ioccur-faces)
 
+(defface ioccur-cursor
+    '((t (:foreground "green")))
+  "Face for cursor color in minibuffer."
+  :group 'ioccur-faces)
 
 ;;; Internal variables.
 ;; String entered in prompt.
@@ -650,7 +654,8 @@ START-POINT is the point where we start searching in buffer."
          (it-next        nil)
          (cur-hist-elm   (car ioccur-history))
          (start-hist     nil) ; Flag to notify if cycling history started.
-         yank-point)
+         yank-point
+         (index 0))
     (unless (string= initial-input "")
       (loop for char across initial-input do (push char tmp-list)))
     (setq ioccur-pattern initial-input)
@@ -715,10 +720,28 @@ START-POINT is the point where we start searching in buffer."
              (with-current-buffer ioccur-current-buffer
                (goto-char start-point)
                (setq yank-point start-point))
-             (kill-new str) (setq tmp-list ())))
+             (kill-new str) (setq tmp-list ()))
+           ;; Add cursor in minibuffer
+           ;;
+           (set-cursor (str pos)
+             (setq pos (min index (1- (length tmp-list))))
+             (when (not (string= str ""))
+               (let* ((real-index (- (1- (length tmp-list)) pos))
+                      (cur-str (substring str real-index (1+ real-index))))
+                 (concat (substring str 0 real-index)
+                         (propertize cur-str 'display
+                                     (if (= index (length tmp-list))
+                                         (concat
+                                          (propertize "|" 'face 'ioccur-cursor)
+                                          cur-str)
+                                         (concat
+                                          cur-str
+                                          (propertize "|" 'face 'ioccur-cursor))))
+                         (substring str (1+ real-index)))))))
+      
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
-                          (concat prompt ioccur-pattern))))
+                          (concat prompt (set-cursor ioccur-pattern index)))))
                (message nil)
                (case char
                  ((not (?\M-p ?\M-n ?\t C-tab)) ; Reset history
@@ -747,7 +770,9 @@ START-POINT is the point where we start searching in buffer."
                   (with-current-buffer ioccur-current-buffer
                     (goto-char start-point)
                     (setq yank-point start-point))
-                  (pop tmp-list) t)
+                  ;(pop (nthcdr index tmp-list))
+                  (setf (nthcdr index tmp-list) (cdr (nthcdr index tmp-list)))
+                  t)
                  (?\C-g                         ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
                  ((right ?\C-z)                 ; Persistent action.
@@ -769,7 +794,7 @@ START-POINT is the point where we start searching in buffer."
                       (setq ioccur-search-function 're-search-forward)) t)
                  (?\C-k                         ; Kill input.
                   (start-timer)
-                  (kill ioccur-pattern) t)
+                  (kill ioccur-pattern) (setq index 0) t)
                  ((?\M-k ?\C-x)                 ; Kill input as sexp.
                   (start-timer)
                   (let ((sexp (prin1-to-string ioccur-pattern)))
@@ -799,11 +824,13 @@ START-POINT is the point where we start searching in buffer."
                         (insert-initial-input)))) t)
                  ((?\t ?\M-p)                   ; Precedent history elm.
                   (start-timer)
+                  (setq index 0)
                   (cycle-hist -1))
                  ((backtab ?\M-n)               ; Next history elm.
                   (start-timer)
+                  (setq index 0)
                   (cycle-hist 1))
-                 (?\C-q                         ; quoted-insert
+                 (?\C-q                         ; quoted-insert.
                   (stop-timer)
                   (let ((char (with-temp-buffer
                                 (call-interactively 'quoted-insert)
@@ -811,10 +838,15 @@ START-POINT is the point where we start searching in buffer."
                     (push (string-to-char char) tmp-list))
                   (start-timer)
                   t)
+                 ;; Movements in minibuffer
+                 (?\C-b                         ; backward-char.
+                  (setq index (min (1+ index) (length tmp-list))) t)
+                 (?\C-f                         ; forward-char.
+                  (setq index (max (1- index) 0)) t)
                  (t                             ; Store character.
                   (start-timer)
                   (if (characterp char)
-                      (push char tmp-list)
+                      (push char (nthcdr index tmp-list))
                       (setq unread-command-events
                             (nconc (mapcar 'identity
                                            (this-single-command-raw-keys))
