@@ -771,7 +771,7 @@ START-POINT is the point where we start searching in buffer."
                   (with-current-buffer ioccur-current-buffer
                     (goto-char start-point)
                     (setq yank-point start-point))
-                  (setf (nthcdr index tmp-list) (cdr (nthcdr index tmp-list)))
+                  (with-no-warnings (pop (nthcdr index tmp-list)))
                   t)
                  (?\C-g                         ; Quit and restore buffers.
                   (setq ioccur-quit-flag t) nil)
@@ -882,6 +882,7 @@ C-j or <left>      Jump and kill `ioccur-buffer'.\n
 RET                Exit keeping `ioccur-buffer'.\n
 DEL                Remove last character entered.\n
 C-k                Kill current input.\n
+C-a/e/b/f          Movements in minibuffer.\n
 M-k/C-x            Kill current input as sexp.\n
 C-w                Yank stuff at point.\n
 C-g                Quit and restore buffer.\n
@@ -942,8 +943,9 @@ C-z or <right> jump without quitting loop.
 C-j or <left>  jump and kill `ioccur-buffer'.
 RET            exit keeping `ioccur-buffer'.
 DEL            remove last character entered.
-C-k            Kill current input.
-M-k             Kill current input as sexp.
+C-k            Kill current input from cursor to eol.
+C-a/e/b/f      Movements in minibuffer.
+M-k            Kill current input as sexp.
 C-w            Yank stuff at point.
 C-g            quit and restore buffer.
 C-s            Toggle split window.
