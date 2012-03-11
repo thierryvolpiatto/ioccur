@@ -689,12 +689,12 @@ START-POINT is the point where we start searching in buffer."
                            (setq cur-hist-elm (ioccur-iter-next it))
                            (setq tmp-list nil)
                            (loop for char across cur-hist-elm
-                              do (push char tmp-list))
+                                 do (push char tmp-list))
                            (setq ioccur-pattern cur-hist-elm)))
                        ;; First call use car of history ring.
                        (setq tmp-list nil)
                        (loop for char across cur-hist-elm
-                          do (push char tmp-list))
+                             do (push char tmp-list))
                        (setq ioccur-pattern cur-hist-elm)
                        (setq start-hist t)))
                  (message "No history available.") (sit-for 2) t))
@@ -703,7 +703,7 @@ START-POINT is the point where we start searching in buffer."
            (insert-initial-input ()
              (unless (string= initial-input "")
                (loop for char across initial-input
-                  do (push char tmp-list))))
+                     do (push char (nthcdr index tmp-list)))))
            ;; Maybe start timer.
            ;;
            (start-timer ()
@@ -720,7 +720,7 @@ START-POINT is the point where we start searching in buffer."
              (with-current-buffer ioccur-current-buffer
                (goto-char start-point)
                (setq yank-point start-point))
-             (kill-new (substring str (- (1- (length tmp-list)) index)))
+             (kill-new (substring str (- (length tmp-list) index)))
              (setq tmp-list (nthcdr index tmp-list)))
            ;; Add cursor in minibuffer
            ;;
