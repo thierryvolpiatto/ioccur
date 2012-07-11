@@ -1,14 +1,11 @@
-;;; ioccur.el --- Incremental occur.
+;;; ioccur.el --- Incremental occur
+
+;; Copyright (C) 2010-2012  Free Software Foundation, Inc.
 
 ;; Author: Thierry Volpiatto <thierry dot volpiatto at gmail dot com>
-
-;; Copyright (C) 2010~2011 Thierry Volpiatto, all rights reserved.
-
+;; X-URL: https://github.com/thierryvolpiatto/ioccur
+;; Version: 2.4
 ;; Compatibility: GNU Emacs >=22.3
-
-;; X-URL: http://mercurial.intuxication.org/hg/ioccur
-
-;; This file is not part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -21,9 +18,7 @@
 ;; General Public License for more details.
 ;; 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with this program; if not, see <http://www.gnu.org/licenses/>.
 
 ;;; Install:
 ;;
@@ -38,20 +33,19 @@
 
 ;;; Commentary:
 ;;
-;; This package provide similar functionality as occur but is incremental.
+;; This package provides the command M-x ioccur, which is similar to
+;; M-x occur, except that it is incremental.
 ;;
-;; You can jump and quit to an occurence or jump
-;; and save the search buffer (ioccur-buffer) for further use.
-;; It is possible to toggle literal and regexp searching while running.
-;; It is auto documented both in mode-line and tooltip.
-;; It have its own history `ioccur-history' which is a real ring.
-;; etc...
+;; You can jump and quit to an occurrence, or jump and save the search
+;; buffer (ioccur-buffer) for further use.  You can toggle literal and
+;; regexp searching while running.  It is auto documented both in
+;; mode-line and tooltip.  It has its own history, `ioccur-history',
+;; which is a real ring.
 ;;
-;; To save `ioccur-history', use desktop, adding that to your .emacs:
+;; To save `ioccur-history' via the Desktop package, add this to your
+;; init file (see (info "(emacs) Saving Emacs Sessions") for details):
+;;
 ;; (add-to-list 'desktop-globals-to-save 'ioccur-history)
-;;
-;; For more info See:
-;; [EVAL] (info "(emacs) saving emacs sessions")
 
 ;;; Code:
 (require 'derived)
