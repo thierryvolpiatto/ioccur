@@ -140,9 +140,20 @@ it slow down the start of ioccur at first time on large buffers."
   :group 'ioccur
   :type 'boolean)
 
+(defcustom ioccur-case-fold-search 'smart
+  "Add 'smart' option to `case-fold-search'.
+When smart is enabled, Ignore case in the search strings
+if pattern contains no uppercase characters.
+Otherwise, with a nil or t value, the behavior is same as
+`case-fold-search'.
+Default value is smart, other possible values are nil and t."
+  :group 'ioccur
+  :type 'symbol)
+
 (defvar ioccur-read-char-or-event-skip-read-key nil
   "Force not using `read-key' to read input in minibuffer even if bounded.
-Set it to non--nil if menu disapear or if keys are echoing in minibuffer.")
+Set it to non--nil if menu disapear or if keys are echoing in minibuffer.
+Deprecated, should be used only in old Emacs versions.")
 
 ;;; Faces.
 (defface ioccur-overlay-face
@@ -297,21 +308,24 @@ Special commands:
   "Print in `ioccur-buffer' lines matching REGEXP in `ioccur-current-buffer'."
   (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
-    (save-excursion
-      (goto-char (point-min))
-      (loop
-         while (not (eobp))
-         ;; We need to read also C-g from here
-         ;; Because when loop is started `ioccur-read-search-input'
-         ;; will read key only when loop is finished
-         ;; and we have no chance to exit loop.
-         when quit-flag do (setq ioccur-quit-flag t) and return nil
-         for count from 0
-         when (funcall ioccur-search-function regexp (point-at-eol) t)
-         do (ioccur-print-line
-             (buffer-substring (point-at-bol) (point-at-eol))
-             count (match-string 0) regexp)
-         do (forward-line 1)))))
+    (let ((case-fold-search (case ioccur-case-fold-search
+                              (smart (if (string-match "[A-Z]" regexp) nil t))
+                              (t ioccur-case-fold-search))))
+      (save-excursion
+        (goto-char (point-min))
+        (loop
+              while (not (eobp))
+              ;; We need to read also C-g from here
+              ;; Because when loop is started `ioccur-read-search-input'
+              ;; will read key only when loop is finished
+              ;; and we have no chance to exit loop.
+              when quit-flag do (setq ioccur-quit-flag t) and return nil
+              for count from 0
+              when (funcall ioccur-search-function regexp (point-at-eol) t)
+              do (ioccur-print-line
+                  (buffer-substring (point-at-bol) (point-at-eol))
+                  count (match-string 0) regexp)
+              do (forward-line 1))))))
 
 
 (defun ioccur-print-match (str &optional all)
