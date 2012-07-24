@@ -309,7 +309,8 @@ Special commands:
   (setq ioccur-count-occurences 0)
   (with-current-buffer ioccur-current-buffer
     (let ((case-fold-search (case ioccur-case-fold-search
-                              (smart (if (string-match "[A-Z]" regexp) nil t))
+                              (smart (let ((case-fold-search nil))
+                                       (if (string-match "[A-Z]" regexp) nil t)))
                               (t ioccur-case-fold-search))))
       (save-excursion
         (goto-char (point-min))
