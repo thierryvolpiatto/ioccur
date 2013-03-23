@@ -155,6 +155,9 @@ Default value is smart, other possible values are nil and t."
 Set it to non--nil if menu disapear or if keys are echoing in minibuffer.
 Deprecated, should be used only in old Emacs versions.")
 
+(defvar ioccur-save-pos-before-jump-hook nil
+  "A hook that run before jumping and quitting `ioccur'.")
+
 ;;; Faces.
 (defface ioccur-overlay-face
     '((t (:background "Green4" :underline t)))
@@ -227,7 +230,8 @@ Deprecated, should be used only in old Emacs versions.")
 (defvar ioccur-message nil)
 ;; Store last window-configuration
 (defvar ioccur-last-window-configuration nil)
-
+;; Save point in current buffer here.
+(defvar ioccur-current-pos nil)
 
 (define-derived-mode ioccur-mode
     text-mode "ioccur"
@@ -580,10 +584,18 @@ Move point to first occurence of `ioccur-pattern'."
 (defun ioccur-jump-and-quit ()
   "Jump to line in other buffer and quit search buffer."
   (interactive)
+  (run-hooks 'ioccur-save-pos-before-jump-hook)
   (when (ioccur-jump ioccur-last-window-configuration)
     (sit-for 0.3)
     (when ioccur-match-overlay
       (delete-overlay ioccur-match-overlay))))
+
+(defun ioccur-save-current-pos-to-mark-ring ()
+  "Save current buffer position to mark ring.
+To use this add it to `ioccur-save-pos-before-jump-hook'."
+  (with-current-buffer ioccur-current-buffer
+    (set-marker (mark-marker) ioccur-current-pos)
+    (push-mark ioccur-current-pos 'nomsg)))
 
 ;;;###autoload
 (defun ioccur-jump-without-quit (&optional mark)
@@ -993,6 +1005,7 @@ for commands provided in the `ioccur-buffer'."
       (jit-lock-fontify-now) (message nil))
     (setq ioccur-buffer (concat "*ioccur-" ioccur-current-buffer "*"))
     (setq ioccur-last-window-configuration (current-window-configuration))
+    (setq ioccur-current-pos (point))
     (if (and (not initial-input)
              (get-buffer ioccur-buffer)
              (not (get-buffer-window ioccur-buffer)))
@@ -1057,7 +1070,8 @@ for commands provided in the `ioccur-buffer'."
               (setq ioccur-count-occurences 0)
               (setq ioccur-quit-flag nil)
               (setq ioccur-message nil)
-              (setq ioccur-search-function ioccur-default-search-function)))))))
+              (setq ioccur-search-function ioccur-default-search-function)
+              (setq ioccur-current-pos nil)))))))
 
 (defun ioccur-save-history ()
   "Save last ioccur element found in `ioccur-history'."
