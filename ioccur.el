@@ -1,6 +1,6 @@
 ;;; ioccur.el --- Incremental occur
 
-;; Copyright (C) 2010-2012  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2013  Free Software Foundation, Inc.
 
 ;; Author: Thierry Volpiatto <thierry dot volpiatto at gmail dot com>
 ;; X-URL: https://github.com/thierryvolpiatto/ioccur
@@ -253,7 +253,7 @@ Special commands:
 
 ;; Compatibility
 (unless (fboundp 'window-system)
-  (defun window-system (&optional arg)
+  (defun window-system (&optional _arg)
     window-system))
 
 ;;; Iterators.
@@ -329,7 +329,7 @@ Special commands:
               when (funcall ioccur-search-function regexp (point-at-eol) t)
               do (ioccur-print-line
                   (buffer-substring (point-at-bol) (point-at-eol))
-                  count (match-string 0) regexp)
+                  count (match-string 0))
               do (forward-line 1))))))
 
 
@@ -353,7 +353,7 @@ If ALL is non--nil highlight the whole string STR."
         (buffer-string))
     (error nil)))
 
-(defun ioccur-print-line (line nline match regexp)
+(defun ioccur-print-line (line nline match)
   "Prepare and insert a matched LINE at line number NLINE in `ioccur-buffer'."
   (with-current-buffer ioccur-buffer
     (let* ((lineno             (int-to-string (1+ nline)))
@@ -430,7 +430,7 @@ The buffer completion list is provided by one of:
 depending on which `ioccur-buffer-completion-use-ido' you have choosen."
   ;; Remove doublons maybe added by minibuffer in `ioccur-history'.
   (setq ioccur-history
-        (loop with hist for i in ioccur-history
+        (loop for i in ioccur-history
            when (not (member i hist)) collect i into hist
            finally return hist))
 
@@ -462,6 +462,8 @@ depending on which `ioccur-buffer-completion-use-ido' you have choosen."
                  (set-window-configuration win-conf))))))
 
       (find-buffer))))
+
+(defvar savehist-save-minibuffer-history)
 
 ;;;###autoload
 (defun ioccur-find-buffer-matching (regexp)
@@ -511,14 +513,12 @@ See `ioccur-find-buffer-matching1'."
 
 (defun ioccur-goto-line (lineno)
   "Goto LINENO without modifying outline visibility if needed."
-  (flet ((gotoline (numline)
-           (goto-char (point-min)) (forward-line (1- numline))))
-    (if (or (eq major-mode 'org-mode)
-            outline-minor-mode)
-        (progn
-          (gotoline lineno)
-          (org-reveal))
-        (gotoline lineno))))
+  (goto-char (point-min))
+  (forward-line (1- lineno))
+  (if (and (fboundp 'org-reveal)
+           (or (derived-mode-p 'org-mode)
+               outline-minor-mode))
+      (org-reveal)))
 
 (defun ioccur-forward-line (n)
   "Forward N lines but empty one's."
@@ -564,9 +564,7 @@ See `ioccur-find-buffer-matching1'."
   "Jump to line in other buffer and put an overlay on it.
 Move point to first occurence of `ioccur-pattern'."
   (let* ((line           (buffer-substring (point-at-bol) (point-at-eol)))
-         (pos            (string-to-number line))
-         (back-search-fn (if (eq ioccur-search-function 're-search-forward)
-                             're-search-backward 'search-backward)))
+         (pos            (string-to-number line)))
     (unless (string= line "")
       (if win-conf
           (set-window-configuration win-conf)
@@ -881,6 +879,8 @@ START-POINT is the point where we start searching in buffer."
 
 (defun ioccur-print-buffer (regexp)
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
+  ;; FIXME: Why force tooltip-mode?  What about sessions with both GUI and
+  ;; tty frames?
   (unless (window-system) (setq tooltip-use-echo-area t) (tooltip-mode 1))
   (let* ((cur-method (if (eq ioccur-search-function 're-search-forward)
                          "Regexp" "Literal"))
@@ -917,7 +917,7 @@ M-p/n or tab/S-tab History."))
     (if (string= regexp "")
         (progn (erase-buffer) (insert title "\n\n"))
         (erase-buffer)
-        (condition-case err
+        (condition-case _
             (ioccur-print-results regexp)
           (error (setq wrong-regexp t)))
         (goto-char (point-min))
