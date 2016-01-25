@@ -1,8 +1,8 @@
 ;;; ioccur.el --- Incremental occur
 
-;; Copyright (C) 2010-2013  Free Software Foundation, Inc.
+;; Copyright (C) 2010-2013, 2016  Free Software Foundation, Inc.
 
-;; Author: Thierry Volpiatto <thierry dot volpiatto at gmail dot com>
+;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; X-URL: https://github.com/thierryvolpiatto/ioccur
 ;; Version: 2.4
 ;; Compatibility: GNU Emacs >=22.3
