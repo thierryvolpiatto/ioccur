@@ -11,12 +11,12 @@
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation; either version 3, or
 ;; (at your option) any later version.
-;; 
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-;; 
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; if not, see <http://www.gnu.org/licenses/>.
 
@@ -141,12 +141,12 @@ it slow down the start of ioccur at first time on large buffers."
   :type 'boolean)
 
 (defcustom ioccur-case-fold-search 'smart
-  "Add 'smart' option to `case-fold-search'.
+  "Add smart option to `case-fold-search'.
 When smart is enabled, Ignore case in the search strings
 if pattern contains no uppercase characters.
 Otherwise, with a nil or t value, the behavior is same as
 `case-fold-search'.
-Default value is smart, other possible values are nil and t."
+Default value is `smart', other possible values are nil and t."
   :group 'ioccur
   :type 'symbol)
 
@@ -343,7 +343,7 @@ If ALL is non--nil highlight the whole string STR."
         (if all
             (add-text-properties
              (point) (point-at-eol)
-             '(face ioccur-match-face))  
+             '(face ioccur-match-face))
             (while (and (funcall ioccur-search-function ioccur-pattern nil t)
                         ;; Don't try to highlight line with a length <= 0.
                         (> (- (match-end 0) (match-beginning 0)) 0))
@@ -758,7 +758,7 @@ START-POINT is the point where we start searching in buffer."
                                           cur-str
                                           (propertize "|" 'face 'ioccur-cursor))))
                          (substring str (1+ real-index)))))))
-      
+
       ;; Start incremental loop.
       (while (let ((char (ioccur-read-char-or-event
                           (concat prompt (set-cursor ioccur-pattern index)))))
@@ -797,7 +797,7 @@ START-POINT is the point where we start searching in buffer."
                  ((right ?\C-z)                 ; Persistent action.
                   (ioccur-jump-without-quit) t)
                  ((?\C- )                       ; Persistent action save mark.
-                  (ioccur-jump-without-quit t) t)                 
+                  (ioccur-jump-without-quit t) t)
                  ((left ?\C-j)                  ; Jump and kill search buffer.
                   (setq ioccur-exit-and-quit-p t) nil)
                  ((next ?\C-v)                  ; Scroll down.
@@ -992,7 +992,7 @@ Special NOTE for terms:
   tab/S-tab are bound to history.
   C-d/u are for following in other buffer.
   Use C-t to Scroll up.
- 
+
 When you quit incremental search with RET, see `ioccur-mode'
 for commands provided in the `ioccur-buffer'."
   (interactive "P")
@@ -1108,7 +1108,7 @@ of matched line in `ioccur-current-buffer'."
             (make-overlay (point-at-bol) (1+ (point-at-eol)))))
   (overlay-put ioccur-match-overlay 'face 'ioccur-match-overlay-face))
 
-            
+
 (provide 'ioccur)
 
 ;;; ioccur.el ends here
