@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010-2020  Free Software Foundation, Inc.
 
-;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Author: Thierry Volpiatto <thievol@posteo.net>
 ;; X-URL: https://github.com/thierryvolpiatto/ioccur
 ;; Version: 2.4
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
