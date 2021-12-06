@@ -376,8 +376,9 @@ So just set `ioccur-length-line' to nil if you don't want lines truncated."
       (when (re-search-forward regexp nil t) buffer))))
 
 (defun ioccur-list-buffers-matching (buffer-match regexp buffer-list)
-  "Collect all buffers in BUFFER-LIST whose names match BUFFER-MATCH and \
-contain lines matching REGEXP."
+  "Return buffers in BUFFER-LIST matching BUFFER-MATCH and REGEXP.
+BUFFER-MATCH will be matched against buffer names and REGEXP
+against lines in the buffer."
   (cl-loop
      with ini-buf-list = (cl-loop for buf in buffer-list
                             unless (rassq buf dired-buffers)
@@ -401,8 +402,7 @@ contain lines matching REGEXP."
                                         &optional
                                         match-buf-name
                                         (buffer-list (buffer-list)))
-  "Find all buffers containing a text matching REGEXP \
-and connect `ioccur' to the selected one.
+  "Find buffers matching REGEXP and connect `ioccur' to the selected one.
 
 If MATCH-BUF-NAME is non--nil search is performed only in buffers
 with name matching specified expression (prompt).
@@ -883,7 +883,7 @@ START-POINT is the point where we start searching in buffer."
   "Pretty Print results matching REGEXP in `ioccur-buffer'."
   ;; FIXME: Why force tooltip-mode?  What about sessions with both GUI and
   ;; tty frames?
-  (unless (window-system) (setq tooltip-use-echo-area t) (tooltip-mode 1))
+  (unless (window-system) (tooltip-mode 1))
   (let* ((cur-method (if (eq ioccur-search-function #'re-search-forward)
                          "Regexp" "Literal"))
          (title      (propertize
@@ -1101,8 +1101,7 @@ for commands provided in the `ioccur-buffer'."
   (overlay-put ioccur-occur-overlay 'face 'ioccur-overlay-face))
 
 (defun ioccur-color-matched-line ()
-  "Highlight and underline current position \
-of matched line in `ioccur-current-buffer'."
+  "Highlight and underline position of matched line in `ioccur-current-buffer'."
   (if ioccur-match-overlay
       (move-overlay ioccur-match-overlay
                     (point-at-bol) (1+ (point-at-eol)))
