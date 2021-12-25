@@ -4,7 +4,7 @@
 
 ;; Author: Thierry Volpiatto <thievol@posteo.net>
 ;; X-URL: https://github.com/thierryvolpiatto/ioccur
-;; Version: 2.5
+;; Version: 2.6
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or
